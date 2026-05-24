@@ -1,0 +1,74 @@
+services:
+  db:
+    image: postgres:18-alpine
+    container_name: pp-db
+    restart: unless-stopped
+    env_file:
+      - ./db/.env
+    environment:
+      PGDATA: /var/lib/postgresql/18/docker
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pp_user -d pp_database"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pp-network
+
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: pp-app
+    restart: unless-stopped
+    working_dir: /usr/src/app
+    command: sh -c "npm install && npm run prisma:generate && npm run start:dev"
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgres://pp_user:pp_password@db:5432/pp_database
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./app:/usr/src/app
+      - app_node_modules:/usr/src/app/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - pp-network
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: pp-web
+    restart: unless-stopped
+    working_dir: /usr/src/web
+    command: sh -c "npm install && npm run dev -- -H 0.0.0.0 -p 3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./web:/usr/src/web
+      - web_node_modules:/usr/src/web/node_modules
+    depends_on:
+      - app
+    networks:
+      - pp-network
+
+volumes:
+  postgres_data:
+  app_node_modules:
+  web_node_modules:
+
+networks:
+  pp-network:
+    driver: bridge

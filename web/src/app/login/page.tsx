@@ -1,0 +1,75 @@
+'use client';
+
+import Link from 'next/link';
+import { Alert, Button, Form, Input, Typography, message } from 'antd';
+import { useState } from 'react';
+import { login } from '@/lib/api';
+
+type FormValues = {
+  email: string;
+  password: string;
+};
+
+export default function LoginPage() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onFinish(values: FormValues) {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await login(values);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('pp_access_token', result.accessToken);
+      }
+      message.success('Login realizado com sucesso');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha no login');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <main className="mx-auto min-h-screen w-full max-w-[1033px] bg-background px-5 pb-10 pt-8 desktop:px-10">
+      <section className="mx-auto w-full max-w-[520px] rounded-xl2 bg-zinc-900 p-5 desktop:p-6">
+        <Typography.Title level={3} style={{ color: 'white', marginTop: 0 }}>
+          Login
+        </Typography.Title>
+
+        {error ? (
+          <Alert type="error" showIcon message="Erro" description={error} />
+        ) : null}
+
+        <Form layout="vertical" onFinish={onFinish} className="mt-4">
+          <Form.Item
+            label={<span className="text-zinc-200">E-mail</span>}
+            name="email"
+            rules={[{ required: true, type: 'email' }]}
+          >
+            <Input size="large" />
+          </Form.Item>
+
+          <Form.Item
+            label={<span className="text-zinc-200">Senha</span>}
+            name="password"
+            rules={[{ required: true, min: 8 }]}
+          >
+            <Input.Password size="large" />
+          </Form.Item>
+
+          <Button block type="primary" size="large" htmlType="submit" loading={loading}>
+            Entrar
+          </Button>
+        </Form>
+
+        <p className="mt-4 text-sm text-zinc-300">
+          Ainda não tem conta?{' '}
+          <Link href="/cadastro" className="text-primary">
+            Fazer cadastro
+          </Link>
+        </p>
+      </section>
+    </main>
+  );
+}

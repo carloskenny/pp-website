@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TripStatus {
+  draft
+  active
+  sold_out
+  finished
+  inactive
+}
+
+enum ReservationStatus {
+  pending
+  payment_pending
+  confirmed
+  canceled
+}
+
+enum UserRole {
+  super_admin
+  admin_operacao
+  guia
+  atendimento
+}
+
+model Trip {
+  id             String             @id @default(cuid())
+  slug           String             @unique
+  title          String
+  destination    String
+  dateLabel      String
+  type           String?
+  difficulty     String?
+  duration       String?
+  price          Decimal?           @db.Decimal(10, 2)
+  capacity       Int?
+  summary        String?
+  paymentLink    String?
+  whatsappLink   String?
+  status         TripStatus         @default(draft)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  reservations   Reservation[]
+  boardingPoints TripBoardingPoint[]
+  mediaAssets    MediaAsset[]
+}
+
+model Reservation {
+  id              String             @id @default(cuid())
+  tripId          String
+  fullName        String
+  email           String
+  whatsapp        String
+  cpf             String?
+  birthDate       DateTime?
+  boardingPointId String?
+  notes           String?
+  status          ReservationStatus  @default(pending)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  trip            Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  boardingPoint   TripBoardingPoint? @relation(fields: [boardingPointId], references: [id], onDelete: SetNull)
+
+  @@index([tripId])
+  @@index([status])
+}
+
+model TripBoardingPoint {
+  id           String        @id @default(cuid())
+  tripId       String
+  label        String
+  order        Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  trip         Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  reservations Reservation[]
+
+  @@index([tripId])
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         UserRole  @default(admin_operacao)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  mediaAssets  MediaAsset[]
+}
+
+model MediaAsset {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  url         String
+  mimeType    String
+  size        Int
+  width       Int?
+  height      Int?
+  alt         String?
+  tripId      String?
+  uploadedBy  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  trip        Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  user        User?    @relation(fields: [uploadedBy], references: [id], onDelete: SetNull)
+
+  @@index([tripId])
+  @@index([uploadedBy])
+}
