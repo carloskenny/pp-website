@@ -8,6 +8,17 @@ Documento de referência para desenho completo do projeto:
 
 ---
 
+## Status atual de execução (até 24/05/2026)
+
+- **Concluído**: fundação fullstack (`app`, `web`, `db`) com Docker.
+- **Concluído**: backend feature-first com `trips`, `reservations`, `users`, `auth`, `media`.
+- **Concluído**: testes automatizados de use cases principais.
+- **Concluído**: frontend com landing + fluxo público + admin básico + autenticação inicial.
+- **Em andamento**: polimento visual responsivo da Home/hero.
+- **Próximo**: proteção de rotas admin + refinamento de payloads administrativos.
+
+---
+
 ## 1) Visão do produto
 
 ### Canais
@@ -142,12 +153,14 @@ Modelo recomendado:
 - Home + páginas de trip + reserva.
 - API básica de trips e reservas (mock -> DB).
 - Admin simples de eventos e reservas.
+- **Status**: concluída.
 
 ## Fase 2 — Operação
 - Lista de passageiros por evento.
 - Histórico de status de reserva.
 - Notificações por e-mail.
 - Dashboard operacional básico.
+- **Status**: não iniciada (backlog).
 
 ## Fase 3 — Mobilidade e escala
 - Melhorias de segurança/auditoria.
@@ -157,13 +170,11 @@ Modelo recomendado:
 
 ## 9) Backlog técnico inicial (prioridade)
 
-1. Criar módulos Nest: `auth`, `trips`, `reservations`, `users`.
-2. Definir schema/migrations no Postgres.
-3. Implementar contratos DTO e validação.
-4. Integrar Next com API (substituir mocks).
-5. Criar área `/admin` com guardas de autenticação.
-6. Implementar lista de passageiros por trip.
-7. Adicionar histórico de mudanças de status.
+1. Proteger rotas `/admin/*` no front (token/session guard).
+2. Exibir dados da trip nas reservas (join/DTO de listagem no backend).
+3. Implementar lista de passageiros por evento.
+4. Adicionar histórico de mudanças de status.
+5. Implementar notificações por e-mail.
 
 ---
 

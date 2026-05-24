@@ -5,6 +5,27 @@ Escopo: toda a árvore a partir da raiz do projeto.
 
 ---
 
+## 0) Estado atual do repositório (checkpoint)
+
+- Backend implementado em `app/` com:
+  - NestJS + Prisma 7 + Zod + dayjs
+  - estrutura feature-first (`features/*/{http,use-cases,domain,infra,schemas}`)
+  - módulos: `trips`, `reservations`, `users`, `auth`, `media`
+  - testes unitários de use cases
+- Frontend implementado em `web/` com:
+  - Next.js + Tailwind + Ant Design
+  - páginas: `/`, `/trips/[slug]`, `/reserva/[slug]`, `/admin/eventos`, `/admin/reservas`, `/login`, `/cadastro`
+- Infra:
+  - Dockerfile em `app` e `web`
+  - Compose com `db`, `app`, `web`
+  - ESLint + Prettier em ambos os projetos
+
+Regra de continuidade:
+- antes de criar estrutura nova, preferir evoluir a estrutura existente.
+- manter o padrão feature-first no backend e rotas App Router no frontend.
+
+---
+
 ## 1) Objetivo do produto
 
 Implementar o site **Pés do Paraná** (mobile-first) como centro operacional para:
@@ -26,6 +47,7 @@ Referência visual: Figma do projeto (node inicial `0:1`).
 - **Next.js (App Router)** + **TypeScript** + **Tailwind CSS** + **Ant Design (antd)**.
 - Renderização híbrida (SSR/ISR/CSR conforme necessidade).
 - Mobile-first obrigatório.
+- Breakpoint desktop oficial: `1033px` (tablet comporta como mobile).
 
 ### Back-end
 - **NestJS** (API REST modular) + **Prisma**.
@@ -33,6 +55,7 @@ Referência visual: Figma do projeto (node inicial `0:1`).
 - Validação de domínio/contrato com **Zod**.
 - Manipulação de datas com **dayjs**.
 - Autenticação preparada para JWT + refresh (quando entrar fase de auth real).
+- Prisma 7 com `prisma.config.ts`.
 
 ### Banco
 - **PostgreSQL**.
@@ -267,14 +290,11 @@ Ao executar tarefas neste repositório, o agente deve:
 
 ## 14) Ordem recomendada de implementação
 
-1. Estrutura base Next + Tailwind + tipos.
-2. Dados mockados em `lib/data`.
-3. Home completa.
-4. Página dinâmica de trip.
-5. Página de reserva com validação client-side.
-6. Admin simples de eventos.
-7. Ajustes de fidelidade visual com Figma.
-8. Preparação de contratos para Nest/Postgres.
+1. Proteger rotas `/admin/*` no frontend.
+2. Ajustar payload de reservas para incluir dados de trip no admin.
+3. Implementar lista de passageiros por evento.
+4. Evoluir notificações/e-mail.
+5. Refinar fidelidade visual com Figma conforme ajustes de UX.
 
 ---
 

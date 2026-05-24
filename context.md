@@ -1,5 +1,40 @@
 # Contexto de Implementação — Site Pés do Paraná
 
+## Status consolidado da implementação (até 24/05/2026)
+
+### Já implementado
+- Backend `app` com NestJS + Prisma 7 + Zod + dayjs.
+- Estrutura backend em arquitetura feature-first:
+  - `features/*/{http,use-cases,domain,infra,schemas}`
+  - `shared/*` para prisma/storage/http helpers.
+- Módulos backend ativos:
+  - `trips`, `reservations`, `users`, `auth`, `media`.
+- Testes unitários cobrindo use cases principais.
+- Frontend `web` com Next.js + Tailwind + Ant Design.
+- Páginas implementadas:
+  - `/` (landing)
+  - `/trips/[slug]`
+  - `/reserva/[slug]`
+  - `/admin/eventos`
+  - `/admin/reservas`
+  - `/login`
+  - `/cadastro`
+- Docker com `Dockerfile` em `app` e `web`, Compose para `db`, `app`, `web`.
+
+### Padrões estabelecidos
+- Projeto 100% web (sem app mobile/PWA no escopo).
+- Mobile-first com breakpoint desktop em `1033px`.
+- Tablet segue comportamento mobile.
+- Prisma 7 com `prisma.config.ts`.
+- ESLint + Prettier configurados em `app` e `web`.
+
+### Onde paramos
+- Ajustes finos de layout/hero na Home em andamento.
+- Próximo bloco funcional recomendado:
+  1. proteção de rotas `/admin/*` via auth no front;
+  2. melhoria do payload de reservas para exibir dados da trip no admin;
+  3. depois iniciar builder de landing por trip (feature já registrada, fora do escopo imediato).
+
 Projeto: Pés do Paraná — site mobile-first para venda/reserva de trips, trilhas e experiências de aventura.
 
 Referência Figma:

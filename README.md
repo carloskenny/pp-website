@@ -1,5 +1,19 @@
 # Pés do Paraná — Ambiente Docker
 
+## Status atual (maio/2026)
+
+- Monorepo funcional com:
+  - `app` (NestJS + Prisma 7 + Zod + dayjs)
+  - `web` (Next.js + Tailwind + Ant Design)
+  - `db` (Postgres 18)
+- Fluxos implementados:
+  - Home mobile-first
+  - `/trips/[slug]` integrado ao backend
+  - `/reserva/[slug]` integrado ao backend
+  - `/admin/eventos` e `/admin/reservas`
+  - `/login` e `/cadastro`
+- Backend com arquitetura feature-first (`http/use-cases/domain/infra/schemas`) e testes de use cases.
+
 ## Escopo do projeto
 
 - Aplicação **100% web**.
@@ -12,7 +26,7 @@ Este repositório usa `docker compose` para subir 3 serviços:
 - `app`: backend (NestJS) em `./app`
 - `web`: frontend (Next.js) em `./web`
 
-`app` e `web` usam `Dockerfile` próprio (build local via Compose).
+`app` e `web` usam `Dockerfile` próprio (build local via Compose, imagem `node:24-slim`).
 
 ## Estrutura esperada
 
@@ -80,10 +94,10 @@ postgres://pp_user:pp_password@db:5432/pp_database
 
 ## Observações importantes
 
-- Atualmente as pastas `app/` e `web/` precisam conter projetos Node válidos com `package.json`.
-- O container `app` executa: `npm install && npm run start:dev`.
+- O container `app` executa: `npm install && npm run prisma:generate && npm run start:dev`.
 - O container `web` executa: `npm install && npm run dev -- -H 0.0.0.0 -p 3000`.
 - O container `db` usa `postgres:18-alpine` com volume em `/var/lib/postgresql` (padrão recomendado para 18+).
+- Se atualizar Prisma/migrations, suba novamente o `app` para regenerar client.
 
 Se você já tinha subido com mapeamento antigo de dados do Postgres, recrie o volume:
 
@@ -94,8 +108,8 @@ docker compose -f compose.yml up -d
 
 Se os scripts forem diferentes no seu projeto, ajuste no `compose.yml`.
 
-## Próximo passo recomendado
+## Onde paramos / próximo passo recomendado
 
-1. Scaffold do backend em `app/` (NestJS).
-2. Scaffold do frontend em `web/` (Next.js).
-3. Subir novamente o compose e validar logs.
+1. Proteger rotas `/admin/*` via autenticação (token/JWT no front).
+2. Enriquecer retorno de reservas com dados da trip (title/slug) no backend.
+3. Iniciar feature de builder da landing por trip (registrada em backlog).
