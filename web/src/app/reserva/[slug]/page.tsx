@@ -14,9 +14,7 @@ export default async function ReservaPage({ params }: Props) {
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-[1033px] bg-background px-5 pb-10 pt-6 desktop:px-10 desktop:pb-14">
-      <h1 className="text-3xl font-extrabold text-white desktop:text-5xl">
-        Reserva
-      </h1>
+      <h1 className="text-3xl font-extrabold text-white desktop:text-5xl">Reserva</h1>
       <p className="mt-1 text-zinc-300">
         {trip.title} • {trip.dateLabel}
       </p>

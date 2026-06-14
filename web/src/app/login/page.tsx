@@ -1,9 +1,9 @@
 'use client';
 
-import Link from 'next/link';
-import { Alert, Button, Form, Input, Typography, message } from 'antd';
+import { Alert, Button, Form, Input, Typography } from 'antd';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { login } from '@/lib/api';
+import { useAuth } from '@/components/auth/auth-provider';
 
 type FormValues = {
   email: string;
@@ -11,6 +11,8 @@ type FormValues = {
 };
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,11 +20,8 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     try {
-      const result = await login(values);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('pp_access_token', result.accessToken);
-      }
-      message.success('Login realizado com sucesso');
+      await login(values);
+      router.replace('/admin/eventos');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha no login');
     } finally {
@@ -64,10 +63,7 @@ export default function LoginPage() {
         </Form>
 
         <p className="mt-4 text-sm text-zinc-300">
-          Ainda não tem conta?{' '}
-          <Link href="/cadastro" className="text-primary">
-            Fazer cadastro
-          </Link>
+          Acesso restrito à equipe e parceiros autorizados.
         </p>
       </section>
     </main>

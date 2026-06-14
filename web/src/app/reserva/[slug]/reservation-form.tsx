@@ -70,11 +70,7 @@ export function ReservationForm({ tripId }: Props) {
         <Input size="large" />
       </Form.Item>
 
-      <Form.Item
-        label="E-mail"
-        name="email"
-        rules={[{ required: true, type: 'email' }]}
-      >
+      <Form.Item label="E-mail" name="email" rules={[{ required: true, type: 'email' }]}>
         <Input size="large" />
       </Form.Item>
 
@@ -91,17 +87,11 @@ export function ReservationForm({ tripId }: Props) {
       </Form.Item>
 
       <Typography.Paragraph className="text-zinc-300">
-        Ao enviar, você concorda com os termos e com contato da equipe para
-        confirmação manual.
+        Ao enviar, você concorda com os termos e com contato da equipe para confirmação
+        manual.
       </Typography.Paragraph>
 
-      <Button
-        block
-        size="large"
-        type="primary"
-        htmlType="submit"
-        loading={loading}
-      >
+      <Button block size="large" type="primary" htmlType="submit" loading={loading}>
         Enviar reserva
       </Button>
     </Form>

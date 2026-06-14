@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import '@ant-design/v5-patch-for-react-19';
 import 'antd/dist/reset.css';
 import './globals.css';
+import { AppProviders } from './providers';
 
 export const metadata: Metadata = {
   title: 'Pés do Paraná Trips',
@@ -18,7 +19,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body>
+        <AppProviders>{children}</AppProviders>
+      </body>
     </html>
   );
 }

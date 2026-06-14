@@ -14,6 +14,12 @@ const config: Config = {
         background: '#111827',
         text: '#F9FAFB',
         muted: '#9CA3AF',
+        'admin-bg': '#F5F1E8',
+        'admin-surface': '#FFFFFF',
+        'admin-sidebar': '#173D2C',
+        'admin-sidebar-strong': '#10261D',
+        'admin-text': '#1F2937',
+        'admin-muted': '#6B7280',
       },
       boxShadow: {
         card: '0 8px 24px rgba(0,0,0,0.25)',

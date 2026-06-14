@@ -1,10 +1,6 @@
 export type TripStatus = 'draft' | 'active' | 'sold_out' | 'finished' | 'inactive';
 
-export type ReservationStatus =
-  | 'pending'
-  | 'payment_pending'
-  | 'confirmed'
-  | 'canceled';
+export type ReservationStatus = 'pending' | 'payment_pending' | 'confirmed' | 'canceled';
 
 export type TripDifficulty = 'easy' | 'moderate' | 'hard';
 

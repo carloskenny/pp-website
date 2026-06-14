@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Button,
   Form,
@@ -15,7 +16,7 @@ import {
   message,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { createTrip, deleteTrip, getTrips, updateTrip } from '@/lib/api';
+import { ApiError, createTrip, deleteTrip, getTrips, updateTrip } from '@/lib/api';
 import type { Trip } from '@/types/trip';
 
 type FormValues = {
@@ -29,6 +30,7 @@ type FormValues = {
 };
 
 export default function AdminEventosPage() {
+  const router = useRouter();
   const [items, setItems] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -39,7 +41,12 @@ export default function AdminEventosPage() {
     setLoading(true);
     try {
       setItems(await getTrips());
-    } catch {
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        localStorage.removeItem('pp_access_token');
+        router.replace('/login');
+        return;
+      }
       message.error('Falha ao carregar eventos');
     } finally {
       setLoading(false);
@@ -82,7 +89,12 @@ export default function AdminEventosPage() {
       }
       setIsOpen(false);
       await loadTrips();
-    } catch {
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        localStorage.removeItem('pp_access_token');
+        router.replace('/login');
+        return;
+      }
       message.error('Não foi possível salvar o evento');
     }
   }
@@ -92,7 +104,12 @@ export default function AdminEventosPage() {
       await deleteTrip(id);
       message.success('Evento removido');
       await loadTrips();
-    } catch {
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        localStorage.removeItem('pp_access_token');
+        router.replace('/login');
+        return;
+      }
       message.error('Não foi possível remover o evento');
     }
   }
@@ -129,7 +146,7 @@ export default function AdminEventosPage() {
   );
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-[1100px] px-4 py-6">
+    <div className="space-y-4">
       <div className="mb-4 flex items-center justify-between">
         <Typography.Title level={3} style={{ margin: 0 }}>
           Admin • Eventos
@@ -162,18 +179,10 @@ export default function AdminEventosPage() {
           <Form.Item label="Título" name="title" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item
-            label="Destino"
-            name="destination"
-            rules={[{ required: true }]}
-          >
+          <Form.Item label="Destino" name="destination" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item
-            label="Data"
-            name="dateLabel"
-            rules={[{ required: true }]}
-          >
+          <Form.Item label="Data" name="dateLabel" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
           <Form.Item label="Status" name="status" rules={[{ required: true }]}>
@@ -195,6 +204,6 @@ export default function AdminEventosPage() {
           </Form.Item>
         </Form>
       </Modal>
-    </main>
+    </div>
   );
 }

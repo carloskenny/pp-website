@@ -19,12 +19,7 @@ export function MobileMenu() {
         <span className="h-1 w-9 rounded bg-white" />
       </button>
 
-      <Drawer
-        title="Menu"
-        placement="right"
-        onClose={() => setOpen(false)}
-        open={open}
-      >
+      <Drawer title="Menu" placement="right" onClose={() => setOpen(false)} open={open}>
         <Space direction="vertical" className="w-full">
           <Link href="/" onClick={() => setOpen(false)}>
             <Button block>Home</Button>
