@@ -86,9 +86,13 @@ docker compose -f compose.yml down -v
 - User: `pp_user`
 - Password: `pp_password`
 
-Connection string usada no `app`:
+Connection strings padronizadas:
 
 ```txt
+Host/local:
+postgres://pp_user:pp_password@localhost:5432/pp_database
+
+Docker/compose:
 postgres://pp_user:pp_password@db:5432/pp_database
 ```
 
@@ -97,6 +101,8 @@ postgres://pp_user:pp_password@db:5432/pp_database
 - O container `app` executa: `npm install && npm run prisma:generate && npm run start:dev`.
 - O container `web` executa: `npm install && npm run dev -- -H 0.0.0.0 -p 3000`.
 - O container `db` usa `postgres:18-alpine` com volume em `/var/lib/postgresql` (padrão recomendado para 18+).
+- Prisma no host lê `app/.env.local`.
+- Prisma no Docker lê `app/.env.docker` via `compose.yml`.
 - Se atualizar Prisma/migrations, suba novamente o `app` para regenerar client.
 
 Se você já tinha subido com mapeamento antigo de dados do Postgres, recrie o volume:
