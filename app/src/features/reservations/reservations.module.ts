@@ -6,8 +6,11 @@ import { CreateReservationUseCase } from './use-cases/create-reservation.use-cas
 import { FindAllReservationsUseCase } from './use-cases/find-all-reservations.use-case';
 import { FindReservationByIdUseCase } from './use-cases/find-reservation-by-id.use-case';
 import { UpdateReservationStatusUseCase } from './use-cases/update-reservation-status.use-case';
+import { SecurityModule } from '../../shared/security/security.module';
+import { TrilheirosModule } from '../trilheiros/trilheiros.module';
 
 @Module({
+  imports: [SecurityModule, TrilheirosModule],
   controllers: [ReservationsController],
   providers: [
     { provide: RESERVATIONS_REPOSITORY, useClass: ReservationsPrismaRepository },

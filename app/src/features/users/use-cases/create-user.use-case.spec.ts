@@ -19,6 +19,8 @@ describe('CreateUserUseCase', () => {
         id: '1',
         ...input,
       })),
+      update: jest.fn(),
+      updatePassword: jest.fn(),
     };
     const useCase = new CreateUserUseCase(repository);
     await expect(useCase.execute(payload)).resolves.toMatchObject({ id: '1' });
@@ -30,6 +32,8 @@ describe('CreateUserUseCase', () => {
       findById: jest.fn(),
       findByEmail: jest.fn().mockResolvedValue({ id: '1' } as never),
       create: jest.fn(),
+      update: jest.fn(),
+      updatePassword: jest.fn(),
     };
     const useCase = new CreateUserUseCase(repository);
     await expect(useCase.execute(payload)).rejects.toBeInstanceOf(

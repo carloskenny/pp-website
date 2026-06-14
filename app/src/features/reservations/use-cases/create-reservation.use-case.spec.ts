@@ -23,17 +23,32 @@ describe('CreateReservationUseCase', () => {
     tripBoardingPoint: { findUnique: jest.fn() },
   } as unknown as PrismaService;
 
+  const trilheirosUseCase = {
+    execute: jest.fn().mockResolvedValue({ id: 'trilheiro-1' }),
+  } as never;
+
   it('creates reservation when trip exists', async () => {
     (prisma.trip.findUnique as jest.Mock).mockResolvedValue({ id: 'trip-1' });
-    const useCase = new CreateReservationUseCase(repository, prisma);
+    const useCase = new CreateReservationUseCase(repository, prisma, trilheirosUseCase);
     await expect(useCase.execute(input)).resolves.toMatchObject({ id: '1' });
   });
 
   it('throws when trip does not exist', async () => {
     (prisma.trip.findUnique as jest.Mock).mockResolvedValue(null);
-    const useCase = new CreateReservationUseCase(repository, prisma);
-    await expect(useCase.execute(input)).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    const useCase = new CreateReservationUseCase(repository, prisma, trilheirosUseCase);
+    await expect(useCase.execute(input)).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('throws when boarding point does not belong to trip', async () => {
+    (prisma.trip.findUnique as jest.Mock).mockResolvedValue({ id: 'trip-1' });
+    (prisma.tripBoardingPoint.findUnique as jest.Mock).mockResolvedValue({
+      id: 'boarding-1',
+      tripId: 'trip-2',
+    });
+
+    const useCase = new CreateReservationUseCase(repository, prisma, trilheirosUseCase);
+    await expect(
+      useCase.execute({ ...input, boardingPointId: 'boarding-1' }),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 });

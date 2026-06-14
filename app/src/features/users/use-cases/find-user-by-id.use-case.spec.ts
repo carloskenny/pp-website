@@ -9,6 +9,8 @@ describe('FindUserByIdUseCase', () => {
       findById: jest.fn().mockResolvedValue({ id: '1' } as never),
       findByEmail: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
+      updatePassword: jest.fn(),
     };
     const useCase = new FindUserByIdUseCase(repository);
     await expect(useCase.execute('1')).resolves.toMatchObject({ id: '1' });
@@ -20,6 +22,8 @@ describe('FindUserByIdUseCase', () => {
       findById: jest.fn().mockResolvedValue(null),
       findByEmail: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
+      updatePassword: jest.fn(),
     };
     const useCase = new FindUserByIdUseCase(repository);
     await expect(useCase.execute('1')).rejects.toBeInstanceOf(NotFoundException);

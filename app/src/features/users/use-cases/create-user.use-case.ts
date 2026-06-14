@@ -6,6 +6,7 @@ import {
   UsersRepository,
 } from '../domain/users.repository';
 import { CreateUserPayload } from '../schemas/users.schema';
+import { toPublicUser } from '../domain/user.presenter';
 
 @Injectable()
 export class CreateUserUseCase {
@@ -21,10 +22,15 @@ export class CreateUserUseCase {
     const data: CreateUserInput = {
       name: payload.name,
       email: payload.email,
-      role: payload.role,
+      role: payload.role ?? 'partner',
+      status: payload.status ?? 'ACTIVE',
+      avatarUrl: payload.avatarUrl ?? null,
+      phone: payload.phone ?? null,
+      preferences: payload.preferences,
       passwordHash,
     };
 
-    return this.usersRepository.create(data);
+    const user = await this.usersRepository.create(data);
+    return toPublicUser(user);
   }
 }

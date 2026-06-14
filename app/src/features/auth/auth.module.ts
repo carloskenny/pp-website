@@ -1,25 +1,20 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './http/auth.controller';
 import { LoginUseCase } from './use-cases/login.use-case';
+import { GetCurrentUserUseCase } from './use-cases/get-current-user.use-case';
+import { RefreshSessionUseCase } from './use-cases/refresh-session.use-case';
+import { LogoutSessionUseCase } from './use-cases/logout-session.use-case';
+import { SecurityModule } from '../../shared/security/security.module';
 
 @Module({
-  imports: [
-    ConfigModule,
-    UsersModule,
-    JwtModule.registerAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.getOrThrow<string>('JWT_SECRET'),
-        signOptions: {
-          expiresIn: configService.getOrThrow<string>('JWT_EXPIRES_IN') as never,
-        },
-      }),
-    }),
-  ],
+  imports: [SecurityModule, UsersModule],
   controllers: [AuthController],
-  providers: [LoginUseCase],
+  providers: [
+    LoginUseCase,
+    GetCurrentUserUseCase,
+    RefreshSessionUseCase,
+    LogoutSessionUseCase,
+  ],
 })
 export class AuthModule {}

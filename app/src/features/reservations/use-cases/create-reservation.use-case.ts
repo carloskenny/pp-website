@@ -5,6 +5,7 @@ import {
   ReservationsRepository,
 } from '../domain/reservations.repository';
 import { CreateReservationInput } from '../schemas/reservations.schema';
+import { UpsertTrilheiroUseCase } from '../../trilheiros/use-cases/upsert-trilheiro.use-case';
 
 @Injectable()
 export class CreateReservationUseCase {
@@ -12,6 +13,7 @@ export class CreateReservationUseCase {
     @Inject(RESERVATIONS_REPOSITORY)
     private readonly reservationsRepository: ReservationsRepository,
     private readonly prisma: PrismaService,
+    private readonly upsertTrilheiroUseCase: UpsertTrilheiroUseCase,
   ) {}
 
   async execute(input: CreateReservationInput) {
@@ -23,8 +25,25 @@ export class CreateReservationUseCase {
         where: { id: input.boardingPointId },
       });
       if (!boardingPoint) throw new NotFoundException('Boarding point not found');
+      if (boardingPoint.tripId !== input.tripId) {
+        throw new NotFoundException('Boarding point not found for this trip');
+      }
     }
 
-    return this.reservationsRepository.create(input);
+    const trilheiro = await this.upsertTrilheiroUseCase.execute({
+      fullName: input.fullName,
+      email: input.email,
+      phone: input.whatsapp,
+      documentNumber: input.cpf ?? null,
+      birthDate: input.birthDate ?? null,
+      status: 'INCOMPLETE',
+      registrationStep: 'minimal',
+      lastAccessAt: new Date(),
+    });
+
+    return this.reservationsRepository.create({
+      ...input,
+      trilheiroId: trilheiro.id,
+    });
   }
 }

@@ -8,8 +8,10 @@ import { FindAllTripsUseCase } from './use-cases/find-all-trips.use-case';
 import { FindTripByIdUseCase } from './use-cases/find-trip-by-id.use-case';
 import { FindTripBySlugUseCase } from './use-cases/find-trip-by-slug.use-case';
 import { UpdateTripUseCase } from './use-cases/update-trip.use-case';
+import { SecurityModule } from '../../shared/security/security.module';
 
 @Module({
+  imports: [SecurityModule],
   controllers: [TripsController],
   providers: [
     { provide: TRIPS_REPOSITORY, useClass: TripsPrismaRepository },

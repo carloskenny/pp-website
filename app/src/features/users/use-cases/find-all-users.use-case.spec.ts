@@ -8,6 +8,8 @@ describe('FindAllUsersUseCase', () => {
       findById: jest.fn(),
       findByEmail: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
+      updatePassword: jest.fn(),
     };
     const useCase = new FindAllUsersUseCase(repository);
     await expect(useCase.execute()).resolves.toHaveLength(1);

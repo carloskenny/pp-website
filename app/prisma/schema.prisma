@@ -24,8 +24,29 @@ enum ReservationStatus {
 enum UserRole {
   super_admin
   admin_operacao
+  partner
   guia
   atendimento
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+enum TrilheiroStatus {
+  INCOMPLETE
+  ACTIVE
+  BLOCKED
+  ARCHIVED
+}
+
+enum TrilheiroRegistrationStep {
+  minimal
+  contact
+  identity
+  complete
 }
 
 model Trip {
@@ -52,6 +73,7 @@ model Trip {
 
 model Reservation {
   id              String             @id @default(cuid())
+  trilheiroId     String?
   tripId          String
   fullName        String
   email           String
@@ -63,9 +85,11 @@ model Reservation {
   status          ReservationStatus  @default(pending)
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
+  trilheiro       Trilheiro?         @relation(fields: [trilheiroId], references: [id], onDelete: SetNull)
   trip            Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
   boardingPoint   TripBoardingPoint? @relation(fields: [boardingPointId], references: [id], onDelete: SetNull)
 
+  @@index([trilheiroId])
   @@index([tripId])
   @@index([status])
 }
@@ -84,15 +108,37 @@ model TripBoardingPoint {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  name         String
-  email        String    @unique
-  passwordHash String
-  role         UserRole  @default(admin_operacao)
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  mediaAssets  MediaAsset[]
+  id              String       @id @default(cuid())
+  name            String
+  email           String       @unique
+  passwordHash    String
+  role            UserRole     @default(admin_operacao)
+  status          UserStatus   @default(ACTIVE)
+  avatarUrl       String?
+  phone           String?
+  preferences     Json?
+  lastLoginAt     DateTime?
+  refreshTokenHash String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  mediaAssets     MediaAsset[]
+}
+
+model Trilheiro {
+  id                String                     @id @default(cuid())
+  fullName          String
+  email             String                     @unique
+  phone             String?
+  documentNumber    String?
+  birthDate         DateTime?
+  avatarUrl         String?
+  status            TrilheiroStatus            @default(INCOMPLETE)
+  registrationStep  TrilheiroRegistrationStep  @default(minimal)
+  preferences       Json?
+  lastAccessAt      DateTime?
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+  reservations      Reservation[]
 }
 
 model MediaAsset {

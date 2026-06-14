@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ZodError } from 'zod';
 import { fromZodError } from '../../../shared/http/zod-validation.exception';
 import { createTripSchema, updateTripSchema } from '../schemas/trips.schema';
@@ -8,6 +17,9 @@ import { FindAllTripsUseCase } from '../use-cases/find-all-trips.use-case';
 import { FindTripByIdUseCase } from '../use-cases/find-trip-by-id.use-case';
 import { FindTripBySlugUseCase } from '../use-cases/find-trip-by-slug.use-case';
 import { UpdateTripUseCase } from '../use-cases/update-trip.use-case';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { RolesGuard } from '../../auth/guards/roles.guard';
 
 @Controller('trips')
 export class TripsController {
@@ -21,6 +33,8 @@ export class TripsController {
   ) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('super_admin', 'admin_operacao')
   findAll() {
     return this.findAllTripsUseCase.execute();
   }
@@ -35,6 +49,8 @@ export class TripsController {
     return this.findTripBySlugUseCase.execute(slug);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('super_admin', 'admin_operacao')
   @Post()
   create(@Body() body: unknown) {
     try {
@@ -45,6 +61,8 @@ export class TripsController {
     }
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('super_admin', 'admin_operacao')
   @Patch(':id')
   update(@Param('id') id: string, @Body() body: unknown) {
     try {
@@ -55,6 +73,8 @@ export class TripsController {
     }
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('super_admin', 'admin_operacao')
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.deleteTripUseCase.execute(id);
