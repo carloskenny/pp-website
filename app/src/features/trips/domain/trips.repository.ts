@@ -15,9 +15,28 @@ export type TripWithBoardingPoints = Prisma.TripGetPayload<{
   };
 }>;
 
+export type PublicTripCard = Prisma.TripGetPayload<{
+  select: {
+    id: true;
+    title: true;
+    slug: true;
+    destination: true;
+    dateLabel: true;
+    eventDate: true;
+    departureTime: true;
+    price: true;
+    capacity: true;
+    difficulty: true;
+    mainImageUrl: true;
+    status: true;
+  };
+}> & {
+  availableSpots: number | null;
+};
+
 export type TripsRepository = {
   findAll(): Promise<TripWithBoardingPoints[]>;
-  findPublished(): Promise<TripWithBoardingPoints[]>;
+  findPublished(): Promise<PublicTripCard[]>;
   findById(id: string): Promise<TripWithBoardingPoints | null>;
   findBySlug(slug: string): Promise<TripWithBoardingPoints | null>;
   findPublishedBySlug(slug: string): Promise<TripWithBoardingPoints | null>;

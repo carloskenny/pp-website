@@ -106,10 +106,15 @@ export type TripMutationPayload = Omit<Partial<Trip>, 'boardingPoints'> & {
 function toTrip(value: ApiTrip): Trip {
   const price =
     typeof value.price === 'string' ? Number(value.price) : (value.price ?? undefined);
+  const availableSpots =
+    typeof value.availableSpots === 'string'
+      ? Number(value.availableSpots)
+      : (value.availableSpots ?? undefined);
 
   return {
     ...value,
     price,
+    availableSpots,
   };
 }
 

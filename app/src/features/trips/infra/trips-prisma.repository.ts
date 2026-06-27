@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
-import { TripsRepository } from '../domain/trips.repository';
+import { PublicTripCard, TripsRepository } from '../domain/trips.repository';
 import { CreateTripInput, UpdateTripInput } from '../schemas/trips.schema';
 
 @Injectable()
@@ -18,6 +18,49 @@ export class TripsPrismaRepository implements TripsRepository {
     },
   } as const;
 
+  private readonly publicTripSelect = {
+    id: true,
+    title: true,
+    slug: true,
+    destination: true,
+    dateLabel: true,
+    eventDate: true,
+    departureTime: true,
+    price: true,
+    capacity: true,
+    difficulty: true,
+    mainImageUrl: true,
+    status: true,
+  } as const;
+
+  private async withAvailableSpots(
+    trips: Array<
+      {
+        id: string;
+        capacity: number | null;
+      } & Omit<PublicTripCard, 'availableSpots' | 'capacity'>
+    >,
+  ) {
+    return Promise.all(
+      trips.map(async (trip) => {
+        const reservationCount = await this.prisma.reservation.count({
+          where: {
+            tripId: trip.id,
+            status: { not: 'canceled' },
+          },
+        });
+
+        return {
+          ...trip,
+          availableSpots:
+            typeof trip.capacity === 'number'
+              ? Math.max(trip.capacity - reservationCount, 0)
+              : null,
+        } satisfies PublicTripCard;
+      }),
+    );
+  }
+
   findAll() {
     return this.prisma.trip.findMany({
       orderBy: { createdAt: 'desc' },
@@ -26,11 +69,13 @@ export class TripsPrismaRepository implements TripsRepository {
   }
 
   findPublished() {
-    return this.prisma.trip.findMany({
-      where: { status: 'active' },
-      orderBy: { createdAt: 'desc' },
-      include: this.includeBoardingPoints,
-    });
+    return this.prisma.trip
+      .findMany({
+        where: { status: 'active' },
+        orderBy: [{ eventDate: 'asc' }, { createdAt: 'asc' }],
+        select: this.publicTripSelect,
+      })
+      .then((trips) => this.withAvailableSpots(trips));
   }
 
   findById(id: string) {

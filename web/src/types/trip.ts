@@ -30,6 +30,7 @@ export type Trip = {
   duration?: string | null;
   price?: number | null;
   capacity?: number | null;
+  availableSpots?: number | null;
   summary?: string | null;
   description?: string | null;
   itinerary?: string[] | null;

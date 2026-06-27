@@ -1,12 +1,8 @@
 import Image from 'next/image';
 import { MobileMenu } from '@/components/layout/mobile-menu';
-import { TripCard } from '@/components/trips/trip-card';
-import { getTrips } from '@/lib/api';
-import { trips as fallbackTrips } from '@/lib/data/trips';
+import { TripsAgendaSection } from '@/components/sections/trips-agenda';
 
-export default async function HomePage() {
-  const trips = await getTrips().catch(() => fallbackTrips);
-
+export default function HomePage() {
   return (
     <main className="mx-auto min-h-screen w-full max-w-[1033px] bg-background">
       <div className="flex min-h-screen flex-col">
@@ -56,14 +52,7 @@ export default async function HomePage() {
       </div>
 
       <section id="eventos" className="px-5 pb-10 pt-2 desktop:px-10 desktop:pb-14">
-        <h2 className="py-2 text-[32px] font-bold leading-tight text-white desktop:text-[42px]">
-          Escolha sua próxima experiência
-        </h2>
-        <div className="grid grid-cols-1 gap-4 py-2 desktop:grid-cols-3 desktop:gap-6">
-          {trips.map((trip) => (
-            <TripCard key={trip.id} trip={trip} />
-          ))}
-        </div>
+        <TripsAgendaSection />
       </section>
 
       <section className="px-4 pb-4 pt-6 text-center desktop:px-10 desktop:pb-10">

@@ -74,10 +74,25 @@ Parar e remover volume do banco:
 docker compose -f compose.yml down -v
 ```
 
+## Reset de desenvolvimento
+
+Para derrubar tudo, recriar os containers e limpar o banco:
+
+```bash
+./scripts/reset-dev.sh
+```
+
+Se você quiser resetar apenas o banco pelo Prisma:
+
+```bash
+cd app
+npm run prisma:reset
+```
+
 ## Portas e URLs
 
 - Frontend (`web`): `http://localhost:3000`
-- Backend (`app`): `http://localhost:3001`
+- Backend (`app`): `http://localhost:3333`
 - PostgreSQL (`db`): `localhost:5432`
 
 ## Credenciais do banco (desenvolvimento)
