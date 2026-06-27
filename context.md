@@ -1,6 +1,6 @@
 # Contexto de Implementação — Site Pés do Paraná
 
-## Status consolidado da implementação (até 24/05/2026)
+## Status consolidado da implementação
 
 ### Já implementado
 - Backend `app` com NestJS + Prisma 7 + Zod + dayjs.
@@ -20,6 +20,11 @@
   - `/login`
   - `/cadastro`
 - Docker com `Dockerfile` em `app` e `web`, Compose para `db`, `app`, `web`.
+- Auth e sessão via cookie httpOnly ou Bearer token.
+- Rotas `/admin/*` protegidas no frontend.
+- RBAC aplicado nos endpoints administrativos.
+- CRUD de eventos e publicação/despublicação.
+- Agenda pública consumindo trips publicadas.
 
 ### Padrões estabelecidos
 - Projeto 100% web (sem app mobile/PWA no escopo).
@@ -27,13 +32,15 @@
 - Tablet segue comportamento mobile.
 - Prisma 7 com `prisma.config.ts`.
 - ESLint + Prettier configurados em `app` e `web`.
+- Não alterar portas, Docker, compose, `.env`, autenticação, RBAC ou estrutura do monorepo sem solicitação explícita.
 
 ### Onde paramos
-- Ajustes finos de layout/hero na Home em andamento.
+- Fase atual: Modelo 2 - Agenda Pública Dinâmica.
 - Próximo bloco funcional recomendado:
-  1. proteção de rotas `/admin/*` via auth no front;
-  2. melhoria do payload de reservas para exibir dados da trip no admin;
-  3. depois iniciar builder de landing por trip (feature já registrada, fora do escopo imediato).
+  1. garantir `GET /api/trips` público com trips publicadas e ordenação por data;
+  2. consolidar cards públicos na Home;
+  3. iniciar a página pública individual do evento;
+  4. depois enriquecer a reserva operacional e a lista de passageiros.
 
 Projeto: Pés do Paraná — site mobile-first para venda/reserva de trips, trilhas e experiências de aventura.
 
@@ -53,7 +60,7 @@ Criar uma landing page moderna, mobile-first e com foco em conversão para o Pé
 O site deve:
 - Centralizar informações das trips.
 - Reduzir dúvidas repetitivas.
-- Exibir agenda de eventos.
+- Exibir agenda dinâmica apenas com eventos publicados.
 - Ter páginas individuais por evento.
 - Permitir reserva online estruturada.
 - Integrar chamada para WhatsApp.
@@ -67,7 +74,7 @@ Base do projeto: o cliente hoje depende muito de Instagram/WhatsApp, processo ma
 Implementar a base do Modelo 2 — Automação Essencial:
 
 - Landing page mobile.
-- Agenda dinâmica.
+- Agenda dinâmica pública.
 - Página individual por evento.
 - Reserva online estruturada.
 - Formulários automáticos.
@@ -230,6 +237,15 @@ Status de evento:
 - sold_out
 - finished
 - inactive
+- canceled
+
+Mapeamento de produto:
+- `draft` = rascunho
+- `active` = publicado
+- `sold_out` = esgotado
+- `finished` = encerrado
+- `inactive` = inativo interno
+- `canceled` = cancelado
 
 ## Regras de implementação
 
@@ -241,14 +257,12 @@ Status de evento:
 - Usar acessibilidade básica: alt em imagens, labels em inputs, aria quando necessário.
 - CTA de WhatsApp deve ser configurável.
 - Criar layout visual fiel ao Figma usando MCP como fonte de verdade.
+- Não alterar portas, Docker, compose, `.env`, autenticação, RBAC ou estrutura do monorepo sem solicitação explícita.
 
-## Primeira tarefa
+## Próxima tarefa
 
-1. Inspecionar o arquivo Figma via MCP.
-2. Identificar frames principais da landing.
-3. Criar estrutura inicial do projeto.
-4. Implementar a Home mobile-first.
-5. Criar dados mockados dos 3 eventos.
-6. Criar cards de eventos e página dinâmica `/trips/[slug]`.
-7. Criar formulário inicial de reserva.
-8. Garantir responsividade e fidelidade visual ao Figma.
+1. Validar `GET /api/trips` como endpoint público.
+2. Exibir apenas trips publicadas na agenda.
+3. Manter cards públicos com retorno para `/trips/[slug]`.
+4. Garantir estado vazio e erro amigável.
+5. Seguir para a página pública individual do evento.

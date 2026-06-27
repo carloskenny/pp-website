@@ -1,8 +1,9 @@
 # IMPLEMENTATION PLAN — Pés do Paraná
 
-Documento operacional para orientar as próximas entregas do projeto.
+Documento operacional para orientar a execução das próximas entregas do projeto.
 
 Base de referência:
+- `BACKLOG.md`
 - `PROJECT_MAP.md`
 - `context.md`
 - estado atual do código em `app/` e `web/`
@@ -13,7 +14,7 @@ Base de referência:
 
 Definir a ordem de implementação para evoluir o projeto de uma base funcional para uma operação web completa, com foco em:
 
-- site público mobile-first;
+- agenda pública dinâmica;
 - portal administrativo protegido;
 - gestão de trips, reservas e passageiros;
 - contratos estáveis para migração/expansão futura.
@@ -25,22 +26,22 @@ Definir a ordem de implementação para evoluir o projeto de uma base funcional 
 ### Já pronto
 - Backend NestJS + Prisma + Zod + dayjs.
 - Módulos backend: `trips`, `reservations`, `users`, `auth`, `media`.
-- API REST básica para trips, reservas, usuários, auth e mídia.
-- Frontend Next.js com rotas públicas e administrativas principais.
-- Login/cadastro inicial.
-- CRUD básico de eventos e lista básica de reservas.
-- Mocks centralizados de trips no frontend.
+- Auth com sessão via cookie httpOnly e Bearer token.
+- Rotas `/admin/*` protegidas no frontend.
+- RBAC aplicado nos endpoints administrativos.
+- CRUD administrativo de eventos.
+- Publicação e despublicação de eventos.
+- Agenda pública consumindo trips publicadas.
+- Formulário público de reserva.
 - Docker e banco Postgres já estruturados.
 
 ### Parcial
-- Guard de admin apenas no frontend.
-- Página de evento ainda enxuta.
-- Formulário de reserva ainda incompleto.
-- Admin de reservas sem contexto rico da trip.
-- Home ainda sem todas as seções previstas.
+- Página pública individual do evento.
+- Reserva com contexto operacional mais rico.
+- Admin de reservas com payload mais completo da trip.
+- Home ainda sem todas as seções finais.
 
 ### Em aberto
-- RBAC real.
 - Lista de passageiros por evento.
 - Histórico de status.
 - Notificações por e-mail.
@@ -57,150 +58,94 @@ Definir a ordem de implementação para evoluir o projeto de uma base funcional 
 4. Evitar lógica de negócio em componentes visuais.
 5. Priorizar entregas que destravam operação real.
 6. Manter mobile-first em todas as telas públicas e administrativas.
+7. Não alterar portas, Docker, compose, `.env`, autenticação, RBAC ou estrutura do monorepo sem solicitação explícita.
 
 ---
 
 ## 4) Ordem de implementação
 
-### Fase 1 — Segurança e contrato
+### Fase 2 — Agenda pública dinâmica
 
 **Objetivo**
-Garantir acesso controlado ao portal e padronizar contratos de dados.
+Exibir no site público apenas eventos publicados, ordenados por data crescente.
 
 **Entregas**
-- Proteger rotas `/admin/*` no frontend de forma consistente.
-- Introduzir proteção também no backend para endpoints sensíveis.
-- Definir fluxo de autenticação mais sólido para uso administrativo.
-- Padronizar payloads de `trip` e `reservation` para consumo do portal.
-
-**Dependências**
-- `auth` existente.
-- estrutura de login/cadastro já disponível.
+- Garantir `GET /api/trips` público.
+- Retornar apenas trips publicadas.
+- Ordenar por data crescente.
+- Exibir cards com imagem, data, preço, dificuldade e vagas.
 
 **Critério de aceite**
-- Usuário sem sessão não acessa área admin.
-- Endpoints sensíveis exigem autenticação.
-- Respostas da API têm formato estável e previsível.
+- Evento publicado aparece na agenda pública.
+- Rascunho, cancelado e encerrado não aparecem.
+- A lista respeita a ordenação por data.
 
 ---
 
-### Fase 2 — Reserva operacional
+### Fase 3 — Página pública individual
+
+**Objetivo**
+Fechar a experiência de decisão do evento.
+
+**Entregas**
+- Página `/trips/[slug]` completa.
+- Conteúdo do evento por slug.
+- CTA de reserva e WhatsApp.
+
+**Critério de aceite**
+- O evento abre por slug e exibe dados suficientes para conversão.
+
+---
+
+### Fase 4 — Reserva operacional
 
 **Objetivo**
 Transformar a reserva em um fluxo útil para operação diária.
 
 **Entregas**
-- Enriquecer listagem de reservas com dados da trip.
+- Enriquecer a listagem de reservas com dados da trip.
 - Incluir ponto de embarque no fluxo e no admin.
 - Normalizar exibição de status e metadados da reserva.
 - Validar consumo de capacidade por trip.
 
-**Dependências**
-- contratos de trip/reservation mais ricos.
-- modelo de `TripBoardingPoint`.
-
 **Critério de aceite**
 - O admin consegue operar reservas sem depender de lookup manual.
 - Cada reserva exibe contexto suficiente para atendimento.
-- Capacidade fica coerente com confirmações/cancelamentos.
 
 ---
 
-### Fase 3 — Lista de passageiros
+### Fase 5 — Passageiros e comunicação
 
 **Objetivo**
-Criar a base operacional do dia do evento.
+Criar a base operacional do evento e reduzir mensagens manuais.
 
 **Entregas**
-- Implementar lista de passageiros por trip/evento.
-- Permitir leitura por status de reserva.
-- Preparar suporte para check-in.
-- Estruturar visão compatível com uso mobile no campo.
-
-**Dependências**
-- reservas enriquecidas.
-- relacionamento estável entre trip e reserva.
-
-**Critério de aceite**
-- A operação consegue abrir uma trip e ver quem está vinculado a ela.
-- A lista serve para conferência e uso em evento.
-
----
-
-### Fase 4 — Histórico e auditoria
-
-**Objetivo**
-Registrar o ciclo de vida da reserva e das ações operacionais.
-
-**Entregas**
-- Histórico de status de reserva.
-- Trilhas de alteração relevantes.
-- Preparação para `audit_logs`.
-
-**Dependências**
-- fluxo de update de status consolidado.
-
-**Critério de aceite**
-- Alterações relevantes ficam rastreáveis.
-- A operação consegue entender a evolução da reserva.
-
----
-
-### Fase 5 — Notificações
-
-**Objetivo**
-Reduzir trabalho manual de comunicação.
-
-**Entregas**
-- E-mails para pré-reserva.
-- E-mails para confirmação/pagamento.
+- Lista de passageiros por trip/evento.
+- E-mails de pré-reserva e confirmação.
 - Base para templates de comunicação.
 
-**Dependências**
-- contratos de reserva estáveis.
-- estrutura de envio/integração definida.
-
 **Critério de aceite**
-- Eventos principais geram comunicação automática ou semi-automática.
-
----
-
-### Fase 6 — Produto público
-
-**Objetivo**
-Completar a face pública com melhor conversão.
-
-**Entregas**
-- Home com as seções previstas no escopo.
-- Página `/trips/[slug]` com conteúdo completo.
-- Página `/reserva/[slug]` com todos os campos obrigatórios.
-- CTA recorrente e consistente.
-
-**Dependências**
-- mocks bem estruturados em `lib/data`.
-- componentes reutilizáveis.
-
-**Critério de aceite**
-- O fluxo público cobre descoberta, decisão e pré-reserva sem lacunas.
+- A operação abre uma trip e vê quem está vinculado a ela.
+- Eventos relevantes geram comunicação consistente.
 
 ---
 
 ## 5) Backlog priorizado
 
 ### Alta prioridade
-1. Proteger `/admin/*`.
-2. Enriquecer payload de reservas com dados da trip.
-3. Implementar lista de passageiros por evento.
+1. Agenda pública dinâmica.
+2. Página pública individual do evento.
+3. Enriquecer payload de reservas com dados da trip.
 
 ### Prioridade média
-4. Histórico de status.
-5. Notificações por e-mail.
-6. Ajustar capacidade e sold out.
+4. Implementar lista de passageiros por evento.
+5. Histórico de status.
+6. Notificações por e-mail.
 
 ### Prioridade de produto
 7. Completar Home.
-8. Completar página de trip.
-9. Completar formulário de reserva.
+8. Completar formulário de reserva.
+9. Refinar conteúdos e CTAs.
 
 ### Prioridade de base técnica
 10. Auditoria.
@@ -234,6 +179,7 @@ Completar a face pública com melhor conversão.
 - Não criar estrutura nova se a existente resolver.
 - Não avançar para fase seguinte sem fechar o aceite da anterior.
 - Não expandir escopo de auth sem necessidade imediata.
+- Não alterar portas, Docker, compose, `.env`, autenticação, RBAC ou estrutura do monorepo sem solicitação explícita.
 
 ---
 
@@ -257,4 +203,3 @@ Executar na ordem:
 1. proteção de `/admin/*`;
 2. payload rico de reservas;
 3. lista de passageiros por evento.
-

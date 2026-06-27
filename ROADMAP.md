@@ -1,13 +1,13 @@
 # ROADMAP — Pés do Paraná
 
-Documento operacional para orientar o que ainda falta implementar no projeto.
+Documento operacional para orientar as próximas entregas do projeto.
 
 Base de referência:
+- `BACKLOG.md`
 - `PROJECT_MAP.md`
 - `IMPLEMENTATION_PLAN.md`
-- `TRILHEIRO_MODEL.md`
+- `context.md`
 - `README.md`
-- estado atual de `app/` e `web/`
 
 ---
 
@@ -15,9 +15,10 @@ Base de referência:
 
 Consolidar as próximas entregas em ordem prática, com foco em:
 
-- operação real do portal administrativo;
-- jornada do trilheiro/cliente final;
-- conversão e clareza do site público;
+- agenda pública dinâmica;
+- página individual do evento;
+- reserva operacional;
+- lista de participantes;
 - redução de esforço manual no dia a dia.
 
 ---
@@ -25,136 +26,99 @@ Consolidar as próximas entregas em ordem prática, com foco em:
 ## 2) Estado atual resumido
 
 ### Já consolidado
-- Autenticação interna do admin.
-- Proteção de rotas administrativas no frontend.
-- Base de usuários internos separada de trilheiros.
-- Persistência de trilheiro e vínculo com reservas.
+- Autenticação e sessão.
+- Proteção de rotas `/admin/*` no frontend.
+- RBAC e guards no backend.
+- CRUD administrativo de eventos.
+- Publicação e despublicação de eventos.
+- Agenda pública consumindo trips publicadas.
+- Formulário público de reserva.
 - Infra Docker, Prisma e seeds padronizados.
-- Frontend admin com shell, perfil e configurações.
 
 ### Ainda em evolução
-- Área do trilheiro/cliente final.
-- Fluxo completo de consulta por e-mail.
-- Reserva com UX mais forte e mais campos úteis.
-- Operação de passageiros por trip/evento.
-- Notificações automáticas.
-- Revisão final de conteúdo e fidelidade visual.
+- Página pública individual do evento.
+- Reserva com mais contexto operacional.
+- Lista de passageiros por evento.
+- Comunicação automática.
+- Revisão fina de conteúdo e fidelidade visual.
 
 ---
 
 ## 3) Roadmap por prioridade
 
-### Fase 1 — Jornada do trilheiro
+### Fase 2 — Agenda pública dinâmica
 
 **Objetivo**
-Fechar o fluxo do cliente final sem misturar com o admin.
+Exibir no site público apenas eventos publicados, ordenados por data crescente.
 
 **Entregas**
-- Tela/fluxo de consulta por e-mail.
-- Complemento de cadastro do trilheiro.
-- Página “Minhas reservas”.
-- Recuperação de acesso por magic link.
-- Atualização de perfil do trilheiro.
+- `GET /api/trips` público retornando somente trips publicadas.
+- Agenda pública consumindo `getTrips()`.
+- Cards com imagem, data, preço, dificuldade e vagas.
+- Estado vazio e erro amigável.
 
 **Critério de aceite**
-- O mesmo e-mail reaproveita o cadastro do trilheiro.
-- O cliente consegue consultar reservas e trips confirmadas.
-- O fluxo inicial funciona sem senha obrigatória.
+- Evento publicado aparece na agenda pública.
+- Rascunho, cancelado e encerrado não aparecem.
+- A lista respeita ordenação por data.
 
 ---
 
-### Fase 2 — Reserva operacional
+### Fase 3 — Página pública individual
 
 **Objetivo**
-Tornar a reserva mais confiável para operação.
+Fechar a experiência de decisão do evento.
 
 **Entregas**
-- Revisar o formulário de `/reserva/[slug]`.
-- Validar ponto de embarque com a trip.
-- Melhorar feedback de envio e estados de pré-reserva.
-- Exibir contexto completo da trip no admin de reservas.
-- Garantir consistência de capacidade e status.
+- Página `/trips/[slug]` completa.
+- Conteúdo do evento por slug.
+- CTA de reserva e WhatsApp.
 
 **Critério de aceite**
-- O atendimento consegue operar sem lookup manual.
-- A reserva já nasce com contexto suficiente.
+- O evento abre por slug e exibe dados suficientes para conversão.
 
 ---
 
-### Fase 3 — Passageiros por evento
+### Fase 4 — Reserva operacional
 
 **Objetivo**
-Criar a base operacional para o dia do rolê.
+Transformar a reserva em um fluxo útil para operação diária.
 
 **Entregas**
-- Lista de passageiros por trip.
-- Filtros por status de reserva.
-- Visão mobile-friendly para conferência em campo.
-- Base para check-in futuro.
+- Enriquecer listagem de reservas com dados da trip.
+- Incluir ponto de embarque no fluxo e no admin.
+- Normalizar exibição de status e metadados da reserva.
+- Validar consumo de capacidade por trip.
+
+**Critério de aceite**
+- O admin consegue operar reservas sem lookup manual.
+- Cada reserva exibe contexto suficiente para atendimento.
+
+---
+
+### Fase 5 — Passageiros e comunicação
+
+**Objetivo**
+Criar a base operacional do evento e reduzir mensagens manuais.
+
+**Entregas**
+- Lista de passageiros por trip/evento.
+- E-mails de pré-reserva e confirmação.
+- Base para templates de comunicação.
 
 **Critério de aceite**
 - A operação abre uma trip e vê quem está vinculado a ela.
-- A lista serve para conferência prática.
-
----
-
-### Fase 4 — Comunicação
-
-**Objetivo**
-Reduzir trabalho manual com mensagens repetidas.
-
-**Entregas**
-- E-mail de pré-reserva.
-- E-mail de confirmação.
-- E-mail de acesso do trilheiro.
-- Base para templates e disparos futuros.
-
-**Critério de aceite**
-- Eventos relevantes passam a gerar comunicação consistente.
-
----
-
-### Fase 5 — Produto público
-
-**Objetivo**
-Fechar a experiência de descoberta e conversão.
-
-**Entregas**
-- Home com seções completas.
-- Página de trip com conteúdo mais robusto.
-- FAQ e provas sociais mais claras.
-- Melhorias visuais e de hierarquia.
-- CTA consistente em mobile.
-
-**Critério de aceite**
-- O site público apresenta descoberta, decisão e reserva sem lacunas.
-
----
-
-### Fase 6 — Base técnica
-
-**Objetivo**
-Preparar o projeto para crescer sem refatoração brusca.
-
-**Entregas**
-- Ajustar contratos e tipos compartilhados.
-- Cobrir fluxos principais com testes.
-- Melhorar validações de domínio.
-- Preparar fila/jobs se a comunicação crescer.
-- Revisar auditoria e histórico quando necessário.
-
-**Critério de aceite**
-- O projeto segue estável ao adicionar novas features.
+- Eventos relevantes geram comunicação consistente.
 
 ---
 
 ## 4) Sequência recomendada
 
-1. Jornada do trilheiro.
-2. Reserva operacional.
-3. Lista de passageiros.
-4. Comunicação.
-5. Produto público.
+1. Agenda pública dinâmica.
+2. Página pública individual.
+3. Reserva operacional.
+4. Lista de passageiros.
+5. Comunicação.
 6. Base técnica e reforço de qualidade.
 
 ---
@@ -164,8 +128,13 @@ Preparar o projeto para crescer sem refatoração brusca.
 - app mobile nativo.
 - PWA dedicado.
 - automação completa de pagamento.
-- integração profunda com múltiplos provedores.
-- autenticação complexa multi-perfil para o cliente final.
+- área do participante.
+- clube PP.
+- certificados.
+- recuperação automática de reserva abandonada.
+- avaliação pós-evento.
+- histórico do trilheiro.
+- automações avançadas de WhatsApp/e-mail.
 
 ---
 
@@ -178,4 +147,3 @@ Antes de iniciar uma nova frente:
 - preservar compatibilidade com o modelo atual;
 - não misturar trilheiro e usuário interno;
 - não expandir escopo sem necessidade operacional.
-

@@ -15,6 +15,12 @@ Escopo: toda a árvore a partir da raiz do projeto.
 - Frontend implementado em `web/` com:
   - Next.js + Tailwind + Ant Design
   - páginas: `/`, `/trips/[slug]`, `/reserva/[slug]`, `/admin/eventos`, `/admin/reservas`, `/login`, `/cadastro`
+- estado funcional atual:
+  - auth e sessão preparados com cookie httpOnly e Bearer token
+  - `/admin/*` protegido no frontend
+  - RBAC aplicado nos endpoints administrativos
+  - CRUD de eventos e publicação/despublicação
+  - agenda pública dinâmica em implementação
 - Infra:
   - Dockerfile em `app` e `web`
   - Compose com `db`, `app`, `web`
@@ -23,6 +29,7 @@ Escopo: toda a árvore a partir da raiz do projeto.
 Regra de continuidade:
 - antes de criar estrutura nova, preferir evoluir a estrutura existente.
 - manter o padrão feature-first no backend e rotas App Router no frontend.
+- não alterar portas, Docker, compose, `.env`, autenticação, RBAC ou estrutura do monorepo sem solicitação explícita.
 
 ---
 
@@ -31,6 +38,7 @@ Regra de continuidade:
 Implementar o site **Pés do Paraná** (mobile-first) como centro operacional para:
 
 - exibir eventos/trips;
+- exibir agenda pública dinâmica apenas com eventos publicados;
 - captar reservas estruturadas;
 - reduzir operação manual em WhatsApp/Instagram;
 - preparar base para administração simples de eventos e reservas.
@@ -74,7 +82,7 @@ Referência visual: Figma do projeto (node inicial `0:1`).
 ### Fase atual (Modelo 2 — automação essencial)
 Entregar:
 - Home (landing) mobile-first;
-- agenda dinâmica;
+- agenda dinâmica pública;
 - página dinâmica de evento `/trips/[slug]`;
 - página de reserva `/reserva/[slug]`;
 - admin simples de eventos `/admin/eventos`;
@@ -125,11 +133,19 @@ Regras:
 Definir tipos iniciais em `src/types`:
 
 - `Trip`
-- `TripStatus`: `draft | active | sold_out | finished | inactive`
+- `TripStatus`: `draft | active | sold_out | finished | inactive | canceled`
 - `TripDifficulty`
 - `BoardingPoint`
 - `Reservation`
 - `ReservationStatus`: `pending | payment_pending | confirmed | canceled`
+
+Mapeamento de produto:
+- `draft` = rascunho
+- `active` = publicado
+- `sold_out` = esgotado
+- `finished` = encerrado
+- `inactive` = inativo interno
+- `canceled` = cancelado
 
 Regras:
 - Sempre usar tipos explícitos.
@@ -227,6 +243,12 @@ Após envio:
 
 ### `/admin/eventos`
 CRUD simplificado de eventos com campos definidos no `context.md`.
+
+### `/admin/reservas`
+- lista operacional de reservas
+- contexto completo da trip vinculada
+- mudança de status
+- pronto para evolução para lista de passageiros
 
 ---
 

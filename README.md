@@ -1,18 +1,21 @@
 # Pés do Paraná — Ambiente Docker
 
-## Status atual (maio/2026)
+## Status atual
 
-- Monorepo funcional com:
+- Monorepo com:
   - `app` (NestJS + Prisma 7 + Zod + dayjs)
   - `web` (Next.js + Tailwind + Ant Design)
-  - `db` (Postgres 18)
-- Fluxos implementados:
-  - Home mobile-first
-  - `/trips/[slug]` integrado ao backend
-  - `/reserva/[slug]` integrado ao backend
-  - `/admin/eventos` e `/admin/reservas`
-  - `/login` e `/cadastro`
-- Backend com arquitetura feature-first (`http/use-cases/domain/infra/schemas`) e testes de use cases.
+  - `db` (PostgreSQL)
+- Fluxos já consolidados:
+  - autenticação e sessão;
+  - proteção de `/admin/*` no frontend;
+  - RBAC no backend com guards e decorators;
+  - CRUD administrativo de eventos;
+  - publicação/despublicação de eventos;
+  - agenda pública com consumo de trips publicadas;
+  - formulário público de reserva;
+  - login, cadastro e rotas administrativas principais.
+- Backend mantido em arquitetura feature-first (`http/use-cases/domain/infra/schemas`) com testes de use cases.
 
 ## Escopo do projeto
 
@@ -94,6 +97,7 @@ npm run prisma:reset
 - Frontend (`web`): `http://localhost:3000`
 - Backend (`app`): `http://localhost:3333`
 - PostgreSQL (`db`): `localhost:5432`
+- MinIO: `http://localhost:9000` no alvo de arquitetura; não está provisionado no `compose.yml` atual.
 
 ## Credenciais do banco (desenvolvimento)
 

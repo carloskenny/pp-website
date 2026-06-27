@@ -8,14 +8,17 @@ Documento de referência para desenho completo do projeto:
 
 ---
 
-## Status atual de execução (até 24/05/2026)
+## Status atual de execução (até 27/06/2026)
 
 - **Concluído**: fundação fullstack (`app`, `web`, `db`) com Docker.
 - **Concluído**: backend feature-first com `trips`, `reservations`, `users`, `auth`, `media`.
 - **Concluído**: testes automatizados de use cases principais.
 - **Concluído**: frontend com landing + fluxo público + admin básico + autenticação inicial.
-- **Em andamento**: polimento visual responsivo da Home/hero.
-- **Próximo**: proteção de rotas admin + refinamento de payloads administrativos.
+- **Concluído**: proteção de rotas `/admin/*` no frontend.
+- **Concluído**: RBAC aplicado em endpoints administrativos.
+- **Concluído**: CRUD de eventos e publicação/despublicação.
+- **Em andamento**: agenda pública dinâmica consumindo trips publicadas.
+- **Próximo**: página pública individual do evento e refinamento da reserva.
 
 ---
 
@@ -37,7 +40,7 @@ Documento de referência para desenho completo do projeto:
 
 ## 2.1 Site público (mobile-first)
 - Home com seções de conversão.
-- Agenda de trips com filtros.
+- Agenda dinâmica pública.
 - Página de trip (`/trips/[slug]`).
 - Fluxo de pré-reserva (`/reserva/[slug]`).
 - CTA WhatsApp configurável (global e por evento).
@@ -105,8 +108,16 @@ Entidades principais:
 - `audit_logs`
 
 Enums sugeridos:
-- `TripStatus`: `draft | active | sold_out | finished | inactive`
+- `TripStatus` técnico atual: `draft | active | sold_out | finished | inactive | canceled`
 - `ReservationStatus`: `pending | payment_pending | confirmed | canceled`
+
+Mapeamento conceitual do produto:
+- `draft` = rascunho
+- `active` = publicado
+- `sold_out` = esgotado
+- `finished` = encerrado
+- `inactive` = inativo interno
+- `canceled` = cancelado
 
 ---
 
@@ -155,14 +166,21 @@ Modelo recomendado:
 - Admin simples de eventos e reservas.
 - **Status**: concluída.
 
-## Fase 2 — Operação
+## Fase 2 — Agenda pública dinâmica
+- `GET /api/trips` público retornando apenas trips publicadas.
+- Cards públicos com ordenação por data.
+- Estados vazio/erro.
+- **Status**: em andamento.
+
+## Fase 3 — Operação
+- Página pública individual por evento.
 - Lista de passageiros por evento.
 - Histórico de status de reserva.
 - Notificações por e-mail.
 - Dashboard operacional básico.
-- **Status**: não iniciada (backlog).
+- **Status**: backlog.
 
-## Fase 3 — Mobilidade e escala
+## Fase 4 — Mobilidade e escala
 - Melhorias de segurança/auditoria.
 - Jobs assíncronos (fila), se necessário.
 
