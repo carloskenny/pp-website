@@ -104,6 +104,18 @@ export function TripAdminForm({ mode, initialTrip }: Props) {
   const canManageEvents = canAccess(user, 'events:manage');
 
   const initialValues = useMemo(() => tripToInitialValues(initialTrip), [initialTrip]);
+  const validateMessages = {
+    required: 'O campo "${label}" é obrigatório.',
+    string: {
+      min: 'O campo "${label}" deve ter no mínimo ${min} caracteres.',
+    },
+    types: {
+      email: 'Informe um e-mail válido.',
+    },
+    number: {
+      min: 'O campo "${label}" deve ser maior ou igual a ${min}.',
+    },
+  };
 
   async function submit(values: FormValues) {
     setLoading(true);
@@ -216,6 +228,7 @@ export function TripAdminForm({ mode, initialTrip }: Props) {
       form={form}
       layout="vertical"
       requiredMark={false}
+      validateMessages={validateMessages}
       initialValues={initialValues}
       onFinish={submit}
       className="max-w-4xl"

@@ -1,3 +1,5 @@
+'use client';
+
 import { Typography } from 'antd';
 import { TripAdminForm } from '@/components/forms/trip-admin-form';
 
