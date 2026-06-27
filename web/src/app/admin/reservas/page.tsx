@@ -2,28 +2,36 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Select, Space, Table, Typography, message } from 'antd';
+import { Result, Select, Space, Spin, Table, Typography, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { useAuth } from '@/components/auth/auth-provider';
 import {
   ApiError,
   getReservations,
   type ReservationItem,
   updateReservationStatus,
 } from '@/lib/api';
+import { canAccess } from '@/lib/permissions';
 
 export default function AdminReservasPage() {
   const router = useRouter();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [items, setItems] = useState<ReservationItem[]>([]);
+  const [selectedTripId, setSelectedTripId] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
+  const canManageReservations = canAccess(user, 'reservations:manage');
 
   async function loadReservations() {
     setLoading(true);
     try {
-      setItems(await getReservations());
+      setItems(await getReservations(selectedTripId));
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        localStorage.removeItem('pp_access_token');
         router.replace('/login');
+        return;
+      }
+      if (error instanceof ApiError && error.status === 403) {
+        message.error('Você não tem permissão para acessar reservas');
         return;
       }
       message.error('Falha ao carregar reservas');
@@ -33,8 +41,10 @@ export default function AdminReservasPage() {
   }
 
   useEffect(() => {
-    void loadReservations();
-  }, []);
+    if (canManageReservations) {
+      void loadReservations();
+    }
+  }, [canManageReservations, selectedTripId]);
 
   async function onChangeStatus(id: string, status: ReservationItem['status']) {
     try {
@@ -43,8 +53,11 @@ export default function AdminReservasPage() {
       await loadReservations();
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        localStorage.removeItem('pp_access_token');
         router.replace('/login');
+        return;
+      }
+      if (error instanceof ApiError && error.status === 403) {
+        message.error('Você não tem permissão para alterar reservas');
         return;
       }
       message.error('Não foi possível atualizar o status');
@@ -94,9 +107,54 @@ export default function AdminReservasPage() {
     [],
   );
 
+  const tripOptions = useMemo(() => {
+    const tripsById = new Map<string, NonNullable<ReservationItem['trip']>>();
+
+    for (const item of items) {
+      if (item.trip) {
+        tripsById.set(item.trip.id, item.trip);
+      }
+    }
+
+    return Array.from(tripsById.values()).map((trip) => ({
+      value: trip.id,
+      label: `${trip.title} • ${trip.dateLabel}`,
+    }));
+  }, [items]);
+
+  if (isAuthLoading) {
+    return (
+      <main className="flex min-h-[40vh] items-center justify-center">
+        <Spin size="large" />
+      </main>
+    );
+  }
+
+  if (!canManageReservations) {
+    return (
+      <Result
+        status="403"
+        title="Acesso negado"
+        subTitle="Seu perfil não tem permissão para acessar reservas."
+      />
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <Typography.Title level={3}>Admin • Reservas</Typography.Title>
+      <div className="flex flex-col gap-3 desktop:flex-row desktop:items-center desktop:justify-between">
+        <Typography.Title level={3} style={{ margin: 0 }}>
+          Admin • Reservas
+        </Typography.Title>
+        <Select
+          allowClear
+          className="w-full desktop:w-[360px]"
+          placeholder="Filtrar participantes por evento"
+          value={selectedTripId}
+          onChange={(value) => setSelectedTripId(value)}
+          options={tripOptions}
+        />
+      </div>
       <Table
         rowKey="id"
         loading={loading}

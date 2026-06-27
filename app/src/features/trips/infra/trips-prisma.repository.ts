@@ -7,27 +7,102 @@ import { CreateTripInput, UpdateTripInput } from '../schemas/trips.schema';
 export class TripsPrismaRepository implements TripsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  private readonly includeBoardingPoints = {
+    boardingPoints: {
+      select: {
+        id: true,
+        label: true,
+        order: true,
+      },
+      orderBy: { order: 'asc' as const },
+    },
+  } as const;
+
   findAll() {
-    return this.prisma.trip.findMany({ orderBy: { createdAt: 'desc' } });
+    return this.prisma.trip.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: this.includeBoardingPoints,
+    });
+  }
+
+  findPublished() {
+    return this.prisma.trip.findMany({
+      where: { status: 'active' },
+      orderBy: { createdAt: 'desc' },
+      include: this.includeBoardingPoints,
+    });
   }
 
   findById(id: string) {
-    return this.prisma.trip.findUnique({ where: { id } });
+    return this.prisma.trip.findUnique({
+      where: { id },
+      include: this.includeBoardingPoints,
+    });
   }
 
   findBySlug(slug: string) {
-    return this.prisma.trip.findUnique({ where: { slug } });
+    return this.prisma.trip.findUnique({
+      where: { slug },
+      include: this.includeBoardingPoints,
+    });
+  }
+
+  findPublishedBySlug(slug: string) {
+    return this.prisma.trip.findFirst({
+      where: { slug, status: 'active' },
+      include: this.includeBoardingPoints,
+    });
   }
 
   create(input: CreateTripInput) {
-    return this.prisma.trip.create({ data: input });
+    const { boardingPoints, ...tripInput } = input;
+
+    return this.prisma.trip.create({
+      data: {
+        ...tripInput,
+        boardingPoints: boardingPoints?.length
+          ? {
+              create: boardingPoints.map((boardingPoint, index) => ({
+                label: boardingPoint.label,
+                order: boardingPoint.order ?? index,
+              })),
+            }
+          : undefined,
+      },
+      include: this.includeBoardingPoints,
+    });
   }
 
   update(id: string, input: UpdateTripInput) {
-    return this.prisma.trip.update({ where: { id }, data: input });
+    const { boardingPoints, ...tripInput } = input;
+
+    return this.prisma.$transaction(async (tx) => {
+      if (boardingPoints) {
+        await tx.tripBoardingPoint.deleteMany({ where: { tripId: id } });
+      }
+
+      return tx.trip.update({
+        where: { id },
+        data: {
+          ...tripInput,
+          boardingPoints: boardingPoints
+            ? {
+                create: boardingPoints.map((boardingPoint, index) => ({
+                  label: boardingPoint.label,
+                  order: boardingPoint.order ?? index,
+                })),
+              }
+            : undefined,
+        },
+        include: this.includeBoardingPoints,
+      });
+    });
   }
 
   delete(id: string) {
-    return this.prisma.trip.delete({ where: { id } });
+    return this.prisma.trip.delete({
+      where: { id },
+      include: this.includeBoardingPoints,
+    });
   }
 }

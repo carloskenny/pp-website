@@ -6,8 +6,10 @@ describe('FindTripBySlugUseCase', () => {
   it('returns trip when found', async () => {
     const repository: TripsRepository = {
       findAll: jest.fn(),
+      findPublished: jest.fn(),
       findById: jest.fn(),
       findBySlug: jest.fn().mockResolvedValue({ slug: 'x' } as never),
+      findPublishedBySlug: jest.fn().mockResolvedValue({ slug: 'x' } as never),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
@@ -19,8 +21,10 @@ describe('FindTripBySlugUseCase', () => {
   it('throws when not found', async () => {
     const repository: TripsRepository = {
       findAll: jest.fn(),
+      findPublished: jest.fn(),
       findById: jest.fn(),
       findBySlug: jest.fn().mockResolvedValue(null),
+      findPublishedBySlug: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),

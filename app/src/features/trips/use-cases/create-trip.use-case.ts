@@ -1,8 +1,5 @@
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
-import {
-  TRIPS_REPOSITORY,
-  TripsRepository,
-} from '../domain/trips.repository';
+import { TRIPS_REPOSITORY, TripsRepository } from '../domain/trips.repository';
 import { CreateTripInput } from '../schemas/trips.schema';
 
 @Injectable()

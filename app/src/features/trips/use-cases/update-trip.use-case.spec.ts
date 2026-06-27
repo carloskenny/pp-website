@@ -6,8 +6,10 @@ describe('UpdateTripUseCase', () => {
   it('updates when trip exists', async () => {
     const repository: TripsRepository = {
       findAll: jest.fn(),
+      findPublished: jest.fn(),
       findById: jest.fn().mockResolvedValue({ id: '1' } as never),
       findBySlug: jest.fn(),
+      findPublishedBySlug: jest.fn(),
       create: jest.fn(),
       update: jest.fn().mockResolvedValue({ id: '1', title: 'Novo' } as never),
       delete: jest.fn(),
@@ -21,8 +23,10 @@ describe('UpdateTripUseCase', () => {
   it('throws when trip does not exist', async () => {
     const repository: TripsRepository = {
       findAll: jest.fn(),
+      findPublished: jest.fn(),
       findById: jest.fn().mockResolvedValue(null),
       findBySlug: jest.fn(),
+      findPublishedBySlug: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),

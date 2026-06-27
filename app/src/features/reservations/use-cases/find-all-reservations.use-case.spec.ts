@@ -5,6 +5,7 @@ describe('FindAllReservationsUseCase', () => {
   it('returns all reservations', async () => {
     const repository: ReservationsRepository = {
       findAll: jest.fn().mockResolvedValue([{ id: '1' } as never]),
+      findByTripId: jest.fn().mockResolvedValue([{ id: '2' } as never]),
       findById: jest.fn(),
       create: jest.fn(),
       updateStatus: jest.fn(),

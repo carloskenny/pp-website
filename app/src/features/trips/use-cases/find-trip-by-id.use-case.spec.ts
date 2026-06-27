@@ -6,8 +6,10 @@ describe('FindTripByIdUseCase', () => {
   it('returns trip when found', async () => {
     const repository: TripsRepository = {
       findAll: jest.fn(),
+      findPublished: jest.fn(),
       findById: jest.fn().mockResolvedValue({ id: '1' } as never),
       findBySlug: jest.fn(),
+      findPublishedBySlug: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
@@ -19,8 +21,10 @@ describe('FindTripByIdUseCase', () => {
   it('throws when not found', async () => {
     const repository: TripsRepository = {
       findAll: jest.fn(),
+      findPublished: jest.fn(),
       findById: jest.fn().mockResolvedValue(null),
       findBySlug: jest.fn(),
+      findPublishedBySlug: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),

@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ZodError } from 'zod';
@@ -33,8 +34,8 @@ export class ReservationsController {
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('super_admin', 'admin_operacao', 'atendimento')
-  findAll() {
-    return this.findAllReservationsUseCase.execute();
+  findAll(@Query('tripId') tripId?: string) {
+    return this.findAllReservationsUseCase.execute({ tripId });
   }
 
   @Get(':id')
@@ -47,9 +48,7 @@ export class ReservationsController {
   @Post()
   create(@Body() body: unknown) {
     try {
-      return this.createReservationUseCase.execute(
-        createReservationSchema.parse(body),
-      );
+      return this.createReservationUseCase.execute(createReservationSchema.parse(body));
     } catch (error) {
       if (error instanceof ZodError) throw fromZodError(error);
       throw error;

@@ -11,7 +11,11 @@ export class FindAllReservationsUseCase {
     private readonly reservationsRepository: ReservationsRepository,
   ) {}
 
-  execute() {
+  execute(filters: { tripId?: string } = {}) {
+    if (filters.tripId) {
+      return this.reservationsRepository.findByTripId(filters.tripId);
+    }
+
     return this.reservationsRepository.findAll();
   }
 }

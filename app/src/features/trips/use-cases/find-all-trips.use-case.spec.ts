@@ -5,8 +5,10 @@ describe('FindAllTripsUseCase', () => {
   it('returns all trips', async () => {
     const repository: TripsRepository = {
       findAll: jest.fn().mockResolvedValue([{ id: '1' } as never]),
+      findPublished: jest.fn().mockResolvedValue([{ id: '2' } as never]),
       findById: jest.fn(),
       findBySlug: jest.fn(),
+      findPublishedBySlug: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),

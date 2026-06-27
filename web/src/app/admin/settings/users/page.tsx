@@ -6,8 +6,10 @@ import {
   Form,
   Input,
   Modal,
+  Result,
   Select,
   Space,
+  Spin,
   Table,
   Typography,
   message,
@@ -25,13 +27,14 @@ import {
   ApiError,
 } from '@/lib/api';
 import { SettingsTabs } from '@/components/layout/settings-tabs';
+import { canAccess } from '@/lib/permissions';
 
 type FormValues = CreateUserPayload & {
   passwordConfirm?: string;
 };
 
 export default function AdminSettingsUsersPage() {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [items, setItems] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -39,6 +42,7 @@ export default function AdminSettingsUsersPage() {
   const [form] = Form.useForm<FormValues>();
 
   const isSuperAdmin = user?.role === 'super_admin';
+  const canManageUsers = canAccess(user, 'users:manage');
 
   async function loadUsers() {
     setLoading(true);
@@ -56,8 +60,10 @@ export default function AdminSettingsUsersPage() {
   }
 
   useEffect(() => {
-    void loadUsers();
-  }, []);
+    if (canManageUsers) {
+      void loadUsers();
+    }
+  }, [canManageUsers]);
 
   function openCreate() {
     setEditing(null);
@@ -149,6 +155,27 @@ export default function AdminSettingsUsersPage() {
     [],
   );
 
+  if (isAuthLoading) {
+    return (
+      <main className="flex min-h-[40vh] items-center justify-center">
+        <Spin size="large" />
+      </main>
+    );
+  }
+
+  if (!canManageUsers) {
+    return (
+      <div className="space-y-4">
+        <SettingsTabs />
+        <Result
+          status="403"
+          title="Acesso negado"
+          subTitle="Seu perfil não tem permissão para gerenciar usuários."
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <SettingsTabs />
@@ -204,7 +231,9 @@ export default function AdminSettingsUsersPage() {
                 isSuperAdmin
                   ? [
                       { value: 'super_admin', label: 'SUPER_ADMIN' },
-                      { value: 'admin_operacao', label: 'ADMIN' },
+                      { value: 'admin_operacao', label: 'ADMIN_OPERAÇÃO' },
+                      { value: 'guia', label: 'GUIA' },
+                      { value: 'atendimento', label: 'ATENDIMENTO' },
                       { value: 'partner', label: 'PARTNER' },
                     ]
                   : [{ value: 'partner', label: 'PARTNER' }]

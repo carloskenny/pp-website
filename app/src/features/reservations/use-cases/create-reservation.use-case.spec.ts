@@ -13,6 +13,7 @@ const input = {
 describe('CreateReservationUseCase', () => {
   const repository: ReservationsRepository = {
     findAll: jest.fn(),
+    findByTripId: jest.fn(),
     findById: jest.fn(),
     create: jest.fn().mockResolvedValue({ id: '1', ...input } as never),
     updateStatus: jest.fn(),
@@ -28,7 +29,10 @@ describe('CreateReservationUseCase', () => {
   } as never;
 
   it('creates reservation when trip exists', async () => {
-    (prisma.trip.findUnique as jest.Mock).mockResolvedValue({ id: 'trip-1' });
+    (prisma.trip.findUnique as jest.Mock).mockResolvedValue({
+      id: 'trip-1',
+      status: 'active',
+    });
     const useCase = new CreateReservationUseCase(repository, prisma, trilheirosUseCase);
     await expect(useCase.execute(input)).resolves.toMatchObject({ id: '1' });
   });
@@ -40,7 +44,10 @@ describe('CreateReservationUseCase', () => {
   });
 
   it('throws when boarding point does not belong to trip', async () => {
-    (prisma.trip.findUnique as jest.Mock).mockResolvedValue({ id: 'trip-1' });
+    (prisma.trip.findUnique as jest.Mock).mockResolvedValue({
+      id: 'trip-1',
+      status: 'active',
+    });
     (prisma.tripBoardingPoint.findUnique as jest.Mock).mockResolvedValue({
       id: 'boarding-1',
       tripId: 'trip-2',

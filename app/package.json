@@ -6,7 +6,7 @@
     "build": "nest build",
     "start": "nest start",
     "start:dev": "nest start --watch",
-    "start:dev:docker": "CHOKIDAR_USEPOLLING=true nest start --watch",
+    "start:dev:docker": "rm -rf dist tsconfig.build.tsbuildinfo && CHOKIDAR_USEPOLLING=true nest start --watch",
     "start:prod": "node dist/main",
     "prisma:generate": "prisma generate --config prisma.config.ts",
     "prisma:migrate": "prisma migrate dev --name init --config prisma.config.ts",

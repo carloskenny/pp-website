@@ -1,12 +1,23 @@
 'use client';
 
-import { Alert, Button, DatePicker, Form, Input, Typography } from 'antd';
+import {
+  Alert,
+  Button,
+  Checkbox,
+  DatePicker,
+  Form,
+  Input,
+  Select,
+  Typography,
+} from 'antd';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { createReservation } from '@/lib/api';
+import type { BoardingPoint } from '@/types/trip';
 
 type Props = {
   tripId: string;
+  boardingPoints: BoardingPoint[];
 };
 
 type FormValues = {
@@ -15,10 +26,12 @@ type FormValues = {
   whatsapp: string;
   cpf?: string;
   birthDate?: dayjs.Dayjs;
+  boardingPointId?: string;
   notes?: string;
+  termsAccepted: boolean;
 };
 
-export function ReservationForm({ tripId }: Props) {
+export function ReservationForm({ tripId, boardingPoints }: Props) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +48,7 @@ export function ReservationForm({ tripId }: Props) {
         whatsapp: values.whatsapp,
         cpf: values.cpf || undefined,
         birthDate: values.birthDate?.toISOString(),
+        boardingPointId: values.boardingPointId || undefined,
         notes: values.notes || undefined,
       });
       setSuccess(true);
@@ -82,14 +96,52 @@ export function ReservationForm({ tripId }: Props) {
         <DatePicker size="large" className="w-full" format="DD/MM/YYYY" />
       </Form.Item>
 
+      <Form.Item
+        label="Ponto de embarque"
+        name="boardingPointId"
+        rules={
+          boardingPoints.length
+            ? [{ required: true, message: 'Selecione o embarque' }]
+            : []
+        }
+      >
+        <Select
+          size="large"
+          disabled={!boardingPoints.length}
+          placeholder={
+            boardingPoints.length
+              ? 'Selecione seu ponto de embarque'
+              : 'Embarque será definido pela equipe'
+          }
+          options={boardingPoints.map((boardingPoint) => ({
+            value: boardingPoint.id,
+            label: boardingPoint.label,
+          }))}
+        />
+      </Form.Item>
+
       <Form.Item label="Observações" name="notes">
         <Input.TextArea rows={4} />
       </Form.Item>
 
-      <Typography.Paragraph className="text-zinc-300">
-        Ao enviar, você concorda com os termos e com contato da equipe para confirmação
-        manual.
-      </Typography.Paragraph>
+      <Form.Item
+        name="termsAccepted"
+        valuePropName="checked"
+        rules={[
+          {
+            validator: (_, value: boolean) =>
+              value
+                ? Promise.resolve()
+                : Promise.reject(new Error('Aceite os termos para continuar')),
+          },
+        ]}
+      >
+        <Checkbox>
+          <Typography.Text className="text-zinc-300">
+            Concordo com os termos e autorizo contato da equipe para confirmação manual.
+          </Typography.Text>
+        </Checkbox>
+      </Form.Item>
 
       <Button block size="large" type="primary" htmlType="submit" loading={loading}>
         Enviar reserva

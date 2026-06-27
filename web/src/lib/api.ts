@@ -7,7 +7,7 @@ function getApiBaseUrl() {
     ? process.env.API_URL || process.env.NEXT_PUBLIC_API_URL
     : process.env.NEXT_PUBLIC_API_URL;
 
-  return (raw || 'http://localhost:3001').replace(/\/$/, '');
+  return (raw || 'http://localhost:3333').replace(/\/$/, '');
 }
 
 export class ApiError extends Error {
@@ -52,13 +52,6 @@ export type AuthSession = {
   user: AppUser;
 };
 
-function getAuthHeaders() {
-  if (typeof window === 'undefined') return {};
-
-  const token = localStorage.getItem('pp_access_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
 async function parseError(response: Response, fallbackMessage: string) {
   const body = await response.json().catch(() => ({}));
   const message = body?.message ?? fallbackMessage;
@@ -69,14 +62,46 @@ function authRequestInit(options: RequestInit = {}): RequestInit {
   return {
     credentials: 'include',
     ...options,
-    headers: {
-      ...(options.headers ?? {}),
-      ...getAuthHeaders(),
-    },
+    headers: options.headers ?? {},
   };
 }
 
+async function refreshAccessToken() {
+  const response = await fetch(`${getApiBaseUrl()}/api/auth/refresh`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    throw new ApiError('Falha ao renovar sessão', response.status);
+  }
+
+  return response.json() as Promise<AuthSession>;
+}
+
+async function authFetch(input: string, options: RequestInit = {}) {
+  const execute = () => fetch(input, authRequestInit(options));
+
+  let response = await execute();
+
+  if (response.status !== 401) {
+    return response;
+  }
+
+  try {
+    await refreshAccessToken();
+  } catch {
+    return response;
+  }
+
+  response = await execute();
+  return response;
+}
+
 type ApiTrip = Omit<Trip, 'price'> & { price?: string | number | null };
+export type TripMutationPayload = Omit<Partial<Trip>, 'boardingPoints'> & {
+  boardingPoints?: Array<{ id?: string; label: string; order?: number }>;
+};
 
 function toTrip(value: ApiTrip): Trip {
   const price =
@@ -116,35 +141,50 @@ export async function createReservation(payload: ReservationPayload) {
 }
 
 export async function getTrips(): Promise<Trip[]> {
-  const response = await fetch(
-    `${getApiBaseUrl()}/api/trips`,
-    authRequestInit({ cache: 'no-store' }),
-  );
+  const response = await fetch(`${getApiBaseUrl()}/api/trips`, {
+    cache: 'no-store',
+  });
   if (!response.ok) await parseError(response, 'Failed to load trips');
   const data = (await response.json()) as ApiTrip[];
   return data.map(toTrip);
 }
 
-export async function createTrip(payload: Partial<Trip>) {
-  const response = await fetch(`${getApiBaseUrl()}/api/trips`, {
+export async function getAdminTrips(): Promise<Trip[]> {
+  const response = await authFetch(`${getApiBaseUrl()}/api/trips/admin`, {
+    cache: 'no-store',
+  });
+  if (!response.ok) await parseError(response, 'Failed to load trips');
+  const data = (await response.json()) as ApiTrip[];
+  return data.map(toTrip);
+}
+
+export async function getAdminTrip(id: string): Promise<Trip> {
+  const response = await authFetch(`${getApiBaseUrl()}/api/trips/${id}`, {
+    cache: 'no-store',
+  });
+  if (!response.ok) await parseError(response, 'Failed to load trip');
+  const data = (await response.json()) as ApiTrip;
+  return toTrip(data);
+}
+
+export async function createTrip(payload: TripMutationPayload) {
+  const response = await authFetch(`${getApiBaseUrl()}/api/trips`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    credentials: 'include',
     body: JSON.stringify(payload),
   });
   if (!response.ok) await parseError(response, 'Failed to create trip');
   return response.json();
 }
 
-export async function updateTrip(id: string, payload: Partial<Trip>) {
-  const response = await fetch(`${getApiBaseUrl()}/api/trips/${id}`, {
+export async function updateTrip(id: string, payload: TripMutationPayload) {
+  const response = await authFetch(`${getApiBaseUrl()}/api/trips/${id}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
     },
-    credentials: 'include',
     body: JSON.stringify(payload),
   });
   if (!response.ok) await parseError(response, 'Failed to update trip');
@@ -152,12 +192,67 @@ export async function updateTrip(id: string, payload: Partial<Trip>) {
 }
 
 export async function deleteTrip(id: string) {
-  const response = await fetch(`${getApiBaseUrl()}/api/trips/${id}`, {
+  const response = await authFetch(`${getApiBaseUrl()}/api/trips/${id}`, {
     method: 'DELETE',
-    credentials: 'include',
-    headers: getAuthHeaders(),
   });
   if (!response.ok) await parseError(response, 'Failed to delete trip');
+}
+
+type UploadUrlResponse = {
+  key: string;
+  uploadUrl: string;
+  publicUrl: string;
+};
+
+type MediaAssetResponse = {
+  id: string;
+  key: string;
+  url: string;
+};
+
+export async function uploadTripImage(file: File): Promise<MediaAssetResponse> {
+  const uploadUrlResponse = await authFetch(`${getApiBaseUrl()}/api/media/upload-url`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      fileName: file.name,
+      mimeType: file.type,
+      folder: 'trips',
+    }),
+  });
+
+  if (!uploadUrlResponse.ok) {
+    await parseError(uploadUrlResponse, 'Falha ao preparar upload');
+  }
+
+  const uploadData = (await uploadUrlResponse.json()) as UploadUrlResponse;
+  const storageResponse = await fetch(uploadData.uploadUrl, {
+    method: 'PUT',
+    headers: { 'Content-Type': file.type },
+    body: file,
+  });
+
+  if (!storageResponse.ok) {
+    throw new ApiError('Falha ao enviar imagem', storageResponse.status);
+  }
+
+  const completeResponse = await authFetch(`${getApiBaseUrl()}/api/media/complete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      key: uploadData.key,
+      url: uploadData.publicUrl,
+      mimeType: file.type,
+      size: file.size,
+      alt: file.name,
+    }),
+  });
+
+  if (!completeResponse.ok) {
+    await parseError(completeResponse, 'Falha ao registrar imagem');
+  }
+
+  return completeResponse.json() as Promise<MediaAssetResponse>;
 }
 
 export type ReservationItem = {
@@ -181,11 +276,11 @@ export type ReservationItem = {
   } | null;
 };
 
-export async function getReservations(): Promise<ReservationItem[]> {
-  const response = await fetch(
-    `${getApiBaseUrl()}/api/reservations`,
-    authRequestInit({ cache: 'no-store' }),
-  );
+export async function getReservations(tripId?: string): Promise<ReservationItem[]> {
+  const searchParams = tripId ? `?tripId=${encodeURIComponent(tripId)}` : '';
+  const response = await authFetch(`${getApiBaseUrl()}/api/reservations${searchParams}`, {
+    cache: 'no-store',
+  });
   if (!response.ok) await parseError(response, 'Failed to load reservations');
   return response.json();
 }
@@ -194,14 +289,11 @@ export async function updateReservationStatus(
   id: string,
   status: ReservationItem['status'],
 ) {
-  const response = await fetch(
-    `${getApiBaseUrl()}/api/reservations/${id}/status`,
-    authRequestInit({
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    }),
-  );
+  const response = await authFetch(`${getApiBaseUrl()}/api/reservations/${id}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
   if (!response.ok) {
     await parseError(response, 'Failed to update reservation status');
   }
@@ -265,38 +357,30 @@ export async function updateCurrentUser(payload: {
   avatarUrl?: string | null;
   preferences?: Partial<UserPreferences>;
 }) {
-  const response = await fetch(
-    `${getApiBaseUrl()}/api/auth/me`,
-    authRequestInit({
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    }),
-  );
+  const response = await authFetch(`${getApiBaseUrl()}/api/auth/me`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
   if (!response.ok) await parseError(response, 'Falha ao atualizar perfil');
   return response.json() as Promise<AppUser>;
 }
 
 export async function updateMyPassword(payload: { password: string }) {
-  const response = await fetch(
-    `${getApiBaseUrl()}/api/auth/me/password`,
-    authRequestInit({
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    }),
-  );
+  const response = await authFetch(`${getApiBaseUrl()}/api/auth/me/password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
   if (!response.ok) await parseError(response, 'Falha ao atualizar senha');
   return response.json();
 }
 
 export async function createAdminUser(payload: CreateUserPayload) {
-  const response = await fetch(`${getApiBaseUrl()}/api/admin/users`, {
+  const response = await authFetch(`${getApiBaseUrl()}/api/admin/users`, {
     method: 'POST',
-    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...getAuthHeaders(),
     },
     body: JSON.stringify(payload),
   });
@@ -313,49 +397,39 @@ export async function createAdminUser(payload: CreateUserPayload) {
 }
 
 export async function getAdminUsers(): Promise<AppUser[]> {
-  const response = await fetch(
-    `${getApiBaseUrl()}/api/admin/users`,
-    authRequestInit({ cache: 'no-store' }),
-  );
+  const response = await authFetch(`${getApiBaseUrl()}/api/admin/users`, {
+    cache: 'no-store',
+  });
   if (!response.ok) await parseError(response, 'Falha ao carregar usuários');
   return response.json();
 }
 
 export async function updateAdminUser(id: string, payload: Partial<CreateUserPayload>) {
-  const response = await fetch(
-    `${getApiBaseUrl()}/api/admin/users/${id}`,
-    authRequestInit({
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    }),
-  );
+  const response = await authFetch(`${getApiBaseUrl()}/api/admin/users/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
   if (!response.ok) await parseError(response, 'Falha ao atualizar usuário');
   return response.json();
 }
 
 export async function updateAdminUserStatus(id: string, status: UserStatus) {
-  const response = await fetch(
-    `${getApiBaseUrl()}/api/admin/users/${id}/status`,
-    authRequestInit({
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    }),
-  );
+  const response = await authFetch(`${getApiBaseUrl()}/api/admin/users/${id}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
   if (!response.ok) await parseError(response, 'Falha ao atualizar status');
   return response.json();
 }
 
 export async function updateAdminUserPassword(id: string, password: string) {
-  const response = await fetch(
-    `${getApiBaseUrl()}/api/admin/users/${id}/password`,
-    authRequestInit({
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password }),
-    }),
-  );
+  const response = await authFetch(`${getApiBaseUrl()}/api/admin/users/${id}/password`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  });
   if (!response.ok) await parseError(response, 'Falha ao atualizar senha');
   return response.json();
 }

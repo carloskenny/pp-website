@@ -1,6 +1,7 @@
 import type { CookieOptions } from 'express';
 import type { User } from '@prisma/client';
 
+export const ACCESS_COOKIE_NAME = 'pp_access_token';
 export const REFRESH_COOKIE_NAME = 'pp_refresh_token';
 
 export type AuthUserSession = {
@@ -24,13 +25,30 @@ export function parseCookie(header: string | undefined, name: string): string | 
   return decodeURIComponent(pair.slice(name.length + 1));
 }
 
-export function buildRefreshCookieOptions(maxAgeMs: number): CookieOptions {
+function buildSessionCookieOptions(maxAgeMs: number): CookieOptions {
   return {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
     path: '/',
     maxAge: maxAgeMs,
+  };
+}
+
+export function buildAccessCookieOptions(maxAgeMs: number): CookieOptions {
+  return buildSessionCookieOptions(maxAgeMs);
+}
+
+export function buildRefreshCookieOptions(maxAgeMs: number): CookieOptions {
+  return buildSessionCookieOptions(maxAgeMs);
+}
+
+export function buildSessionClearCookieOptions(): CookieOptions {
+  return {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
   };
 }
 

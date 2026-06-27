@@ -8,6 +8,13 @@ export type Permission =
   | 'profile:manage'
   | 'settings:manage';
 
+const ADMIN_PANEL_ROLES: AppUser['role'][] = [
+  'super_admin',
+  'admin_operacao',
+  'guia',
+  'atendimento',
+];
+
 export function hasRole(user: AppUser | null, roles: AppUser['role'][]) {
   return Boolean(user && roles.includes(user.role));
 }
@@ -17,9 +24,16 @@ export function canAccess(user: AppUser | null, permission: Permission) {
 
   switch (permission) {
     case 'admin:access':
+      return ADMIN_PANEL_ROLES.includes(user.role);
     case 'events:manage':
-    case 'reservations:manage':
       return user.role === 'super_admin' || user.role === 'admin_operacao';
+    case 'reservations:manage':
+      return (
+        user.role === 'super_admin' ||
+        user.role === 'admin_operacao' ||
+        user.role === 'guia' ||
+        user.role === 'atendimento'
+      );
     case 'users:manage':
       return user.role === 'super_admin';
     case 'profile:manage':

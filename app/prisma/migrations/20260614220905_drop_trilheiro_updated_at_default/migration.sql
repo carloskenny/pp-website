@@ -1,0 +1,1 @@
+ALTER TABLE "Trilheiro" ALTER COLUMN "updatedAt" DROP DEFAULT;

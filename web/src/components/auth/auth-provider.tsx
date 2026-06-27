@@ -41,18 +41,6 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function saveToken(accessToken: string) {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('pp_access_token', accessToken);
-  }
-}
-
-function clearToken() {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('pp_access_token');
-  }
-}
-
 function isAuthError(error: unknown) {
   return error instanceof ApiError && error.status === 401;
 }
@@ -62,7 +50,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const setSession = useCallback((session: AuthSession) => {
-    saveToken(session.accessToken);
     setUser(session.user);
   }, []);
 
@@ -78,7 +65,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(session);
           return;
         } catch {
-          clearToken();
           setUser(null);
           return;
         }
@@ -108,7 +94,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await apiLogoutSession();
     } finally {
-      clearToken();
       setUser(null);
     }
   }, []);

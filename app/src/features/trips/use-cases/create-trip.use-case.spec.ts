@@ -13,8 +13,10 @@ describe('CreateTripUseCase', () => {
   it('creates when slug is unique', async () => {
     const repository: TripsRepository = {
       findAll: jest.fn(),
+      findPublished: jest.fn(),
       findById: jest.fn(),
       findBySlug: jest.fn().mockResolvedValue(null),
+      findPublishedBySlug: jest.fn(),
       create: jest.fn().mockResolvedValue({ id: '1', ...input } as never),
       update: jest.fn(),
       delete: jest.fn(),
@@ -26,8 +28,10 @@ describe('CreateTripUseCase', () => {
   it('throws when slug already exists', async () => {
     const repository: TripsRepository = {
       findAll: jest.fn(),
+      findPublished: jest.fn(),
       findById: jest.fn(),
       findBySlug: jest.fn().mockResolvedValue({ id: '1' } as never),
+      findPublishedBySlug: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),

@@ -33,20 +33,27 @@ export class TripsController {
   ) {}
 
   @Get()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('super_admin', 'admin_operacao')
   findAll() {
-    return this.findAllTripsUseCase.execute();
+    return this.findAllTripsUseCase.execute({ publishedOnly: true });
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.findTripByIdUseCase.execute(id);
+  @Get('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('super_admin', 'admin_operacao')
+  findAllAdmin() {
+    return this.findAllTripsUseCase.execute();
   }
 
   @Get('slug/:slug')
   findBySlug(@Param('slug') slug: string) {
-    return this.findTripBySlugUseCase.execute(slug);
+    return this.findTripBySlugUseCase.execute(slug, { publishedOnly: true });
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('super_admin', 'admin_operacao')
+  findOne(@Param('id') id: string) {
+    return this.findTripByIdUseCase.execute(id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

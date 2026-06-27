@@ -12,6 +12,7 @@ enum TripStatus {
   sold_out
   finished
   inactive
+  canceled
 }
 
 enum ReservationStatus {
@@ -55,12 +56,18 @@ model Trip {
   title          String
   destination    String
   dateLabel      String
+  eventDate      DateTime?
+  departureTime  String?
   type           String?
   difficulty     String?
   duration       String?
   price          Decimal?           @db.Decimal(10, 2)
   capacity       Int?
   summary        String?
+  description    String?
+  itinerary      Json?
+  includedItems  Json?
+  mainImageUrl   String?
   paymentLink    String?
   whatsappLink   String?
   status         TripStatus         @default(draft)

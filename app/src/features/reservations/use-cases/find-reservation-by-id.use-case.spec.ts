@@ -6,6 +6,7 @@ describe('FindReservationByIdUseCase', () => {
   it('returns reservation when found', async () => {
     const repository: ReservationsRepository = {
       findAll: jest.fn(),
+      findByTripId: jest.fn(),
       findById: jest.fn().mockResolvedValue({ id: '1' } as never),
       create: jest.fn(),
       updateStatus: jest.fn(),
@@ -17,13 +18,12 @@ describe('FindReservationByIdUseCase', () => {
   it('throws when not found', async () => {
     const repository: ReservationsRepository = {
       findAll: jest.fn(),
+      findByTripId: jest.fn(),
       findById: jest.fn().mockResolvedValue(null),
       create: jest.fn(),
       updateStatus: jest.fn(),
     };
     const useCase = new FindReservationByIdUseCase(repository);
-    await expect(useCase.execute('1')).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    await expect(useCase.execute('1')).rejects.toBeInstanceOf(NotFoundException);
   });
 });

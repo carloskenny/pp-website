@@ -24,6 +24,10 @@ function getRoleLabel(role: string) {
       return 'Super admin';
     case 'admin_operacao':
       return 'Admin';
+    case 'guia':
+      return 'Guia';
+    case 'atendimento':
+      return 'Atendimento';
     case 'partner':
       return 'Parceiro';
     default:
@@ -39,9 +43,21 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const items = useMemo<MenuProps['items']>(() => {
     const baseItems: MenuProps['items'] = [
       { key: '/admin/dashboard', label: <Link href="/admin/dashboard">Dashboard</Link> },
-      { key: '/admin/eventos', label: <Link href="/admin/eventos">Eventos</Link> },
-      { key: '/admin/reservas', label: <Link href="/admin/reservas">Reservas</Link> },
     ];
+
+    if (user && canAccess(user, 'events:manage')) {
+      baseItems.push({
+        key: '/admin/eventos',
+        label: <Link href="/admin/eventos">Eventos</Link>,
+      });
+    }
+
+    if (user && canAccess(user, 'reservations:manage')) {
+      baseItems.push({
+        key: '/admin/reservas',
+        label: <Link href="/admin/reservas">Reservas</Link>,
+      });
+    }
 
     if (user && canAccess(user, 'users:manage')) {
       baseItems.push({
@@ -50,20 +66,26 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       });
     }
 
-    baseItems.push({
-      key: '/admin/settings/preferences',
-      label: <Link href="/admin/settings/preferences">Configurações</Link>,
-    });
+    if (user && canAccess(user, 'settings:manage')) {
+      baseItems.push({
+        key: '/admin/settings/preferences',
+        label: <Link href="/admin/settings/preferences">Configurações</Link>,
+      });
+    }
 
     return baseItems;
   }, [user]);
 
   const userMenuItems: MenuProps['items'] = [
     { key: '/admin/profile', label: <Link href="/admin/profile">Meu perfil</Link> },
-    {
-      key: '/admin/settings/preferences',
-      label: <Link href="/admin/settings/preferences">Preferências</Link>,
-    },
+    ...(user && canAccess(user, 'settings:manage')
+      ? [
+          {
+            key: '/admin/settings/preferences',
+            label: <Link href="/admin/settings/preferences">Preferências</Link>,
+          },
+        ]
+      : []),
     ...(user && canAccess(user, 'users:manage')
       ? [
           {
@@ -101,7 +123,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   const selectedKey =
     items?.find((item) => pathname.startsWith(String(item?.key)))?.key?.toString() ??
-    '/admin/eventos';
+    '/admin/dashboard';
 
   return (
     <Layout className="admin-shell min-h-screen bg-admin-bg text-admin-text">

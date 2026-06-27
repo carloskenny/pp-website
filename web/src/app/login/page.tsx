@@ -1,7 +1,7 @@
 'use client';
 
 import { Alert, Button, Form, Input, Typography } from 'antd';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
 
@@ -12,6 +12,7 @@ type FormValues = {
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +22,10 @@ export default function LoginPage() {
     setError(null);
     try {
       await login(values);
-      router.replace('/admin/eventos');
+      const nextPath = searchParams.get('next');
+      const redirectTo =
+        nextPath && nextPath.startsWith('/admin') ? nextPath : '/admin/dashboard';
+      router.replace(redirectTo);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha no login');
     } finally {

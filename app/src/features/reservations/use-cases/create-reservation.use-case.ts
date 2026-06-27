@@ -19,6 +19,7 @@ export class CreateReservationUseCase {
   async execute(input: CreateReservationInput) {
     const trip = await this.prisma.trip.findUnique({ where: { id: input.tripId } });
     if (!trip) throw new NotFoundException('Trip not found');
+    if (trip.status !== 'active') throw new NotFoundException('Trip not found');
 
     if (input.boardingPointId) {
       const boardingPoint = await this.prisma.tripBoardingPoint.findUnique({

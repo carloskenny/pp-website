@@ -1,101 +1,94 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Button,
-  Form,
-  Input,
-  InputNumber,
-  Modal,
   Popconfirm,
-  Select,
+  Result,
   Space,
+  Spin,
   Table,
+  Tag,
   Typography,
   message,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { ApiError, createTrip, deleteTrip, getTrips, updateTrip } from '@/lib/api';
-import type { Trip } from '@/types/trip';
+import { useAuth } from '@/components/auth/auth-provider';
+import { ApiError, deleteTrip, getAdminTrips, updateTrip } from '@/lib/api';
+import { canAccess } from '@/lib/permissions';
+import type { Trip, TripStatus } from '@/types/trip';
 
-type FormValues = {
-  slug: string;
-  title: string;
-  destination: string;
-  dateLabel: string;
-  status: Trip['status'];
-  price?: number;
-  capacity?: number;
+const statusLabels: Record<TripStatus, string> = {
+  draft: 'Rascunho',
+  active: 'Publicado',
+  sold_out: 'Esgotado',
+  finished: 'Encerrado',
+  inactive: 'Inativo',
+  canceled: 'Cancelado',
+};
+
+const statusColors: Record<TripStatus, string> = {
+  draft: 'default',
+  active: 'green',
+  sold_out: 'orange',
+  finished: 'blue',
+  inactive: 'default',
+  canceled: 'red',
 };
 
 export default function AdminEventosPage() {
   const router = useRouter();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [items, setItems] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const [editing, setEditing] = useState<Trip | null>(null);
-  const [form] = Form.useForm<FormValues>();
+  const canManageEvents = canAccess(user, 'events:manage');
 
-  async function loadTrips() {
+  const loadTrips = useCallback(async () => {
     setLoading(true);
     try {
-      setItems(await getTrips());
+      setItems(await getAdminTrips());
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        localStorage.removeItem('pp_access_token');
         router.replace('/login');
+        return;
+      }
+      if (error instanceof ApiError && error.status === 403) {
+        message.error('Você não tem permissão para gerenciar eventos');
         return;
       }
       message.error('Falha ao carregar eventos');
     } finally {
       setLoading(false);
     }
-  }
+  }, [router]);
 
   useEffect(() => {
-    void loadTrips();
-  }, []);
+    if (canManageEvents) {
+      void loadTrips();
+    }
+  }, [canManageEvents, loadTrips]);
 
-  function openCreate() {
-    setEditing(null);
-    form.resetFields();
-    form.setFieldsValue({ status: 'draft' });
-    setIsOpen(true);
-  }
+  async function togglePublication(item: Trip) {
+    const nextStatus: TripStatus = item.status === 'active' ? 'draft' : 'active';
 
-  function openEdit(item: Trip) {
-    setEditing(item);
-    form.setFieldsValue({
-      slug: item.slug,
-      title: item.title,
-      destination: item.destination,
-      dateLabel: item.dateLabel,
-      status: item.status,
-      price: item.price ?? undefined,
-      capacity: item.capacity ?? undefined,
-    });
-    setIsOpen(true);
-  }
-
-  async function submit(values: FormValues) {
     try {
-      if (editing) {
-        await updateTrip(editing.id, values);
-        message.success('Evento atualizado');
-      } else {
-        await createTrip(values);
-        message.success('Evento criado');
-      }
-      setIsOpen(false);
+      await updateTrip(item.id, { status: nextStatus });
+      message.success(
+        nextStatus === 'active' ? 'Evento publicado' : 'Evento despublicado',
+      );
       await loadTrips();
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        localStorage.removeItem('pp_access_token');
         router.replace('/login');
         return;
       }
-      message.error('Não foi possível salvar o evento');
+      if (error instanceof ApiError && error.status === 403) {
+        message.error('Você não tem permissão para alterar eventos');
+        return;
+      }
+      message.error('Não foi possível alterar o status');
     }
   }
 
@@ -106,8 +99,11 @@ export default function AdminEventosPage() {
       await loadTrips();
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        localStorage.removeItem('pp_access_token');
         router.replace('/login');
+        return;
+      }
+      if (error instanceof ApiError && error.status === 403) {
+        message.error('Você não tem permissão para remover eventos');
         return;
       }
       message.error('Não foi possível remover o evento');
@@ -118,15 +114,33 @@ export default function AdminEventosPage() {
     () => [
       { title: 'Título', dataIndex: 'title', key: 'title' },
       { title: 'Data', dataIndex: 'dateLabel', key: 'dateLabel' },
+      { title: 'Saída', dataIndex: 'departureTime', key: 'departureTime' },
       { title: 'Destino', dataIndex: 'destination', key: 'destination' },
-      { title: 'Status', dataIndex: 'status', key: 'status' },
+      {
+        title: 'Preço',
+        key: 'price',
+        render: (_, record) =>
+          typeof record.price === 'number' ? `R$ ${record.price.toFixed(2)}` : '—',
+      },
+      { title: 'Vagas', dataIndex: 'capacity', key: 'capacity' },
+      {
+        title: 'Status',
+        dataIndex: 'status',
+        key: 'status',
+        render: (status: TripStatus) => (
+          <Tag color={statusColors[status]}>{statusLabels[status] ?? status}</Tag>
+        ),
+      },
       {
         title: 'Ações',
         key: 'actions',
         render: (_, record) => (
-          <Space>
-            <Button size="small" onClick={() => openEdit(record)}>
+          <Space wrap>
+            <Button size="small" href={`/admin/eventos/${record.id}/editar`}>
               Editar
+            </Button>
+            <Button size="small" onClick={() => void togglePublication(record)}>
+              {record.status === 'active' ? 'Despublicar' : 'Publicar'}
             </Button>
             <Popconfirm
               title="Remover evento?"
@@ -145,15 +159,33 @@ export default function AdminEventosPage() {
     [],
   );
 
+  if (isAuthLoading) {
+    return (
+      <main className="flex min-h-[40vh] items-center justify-center">
+        <Spin size="large" />
+      </main>
+    );
+  }
+
+  if (!canManageEvents) {
+    return (
+      <Result
+        status="403"
+        title="Acesso negado"
+        subTitle="Seu perfil não tem permissão para gerenciar eventos."
+      />
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col gap-3 desktop:flex-row desktop:items-center desktop:justify-between">
         <Typography.Title level={3} style={{ margin: 0 }}>
           Admin • Eventos
         </Typography.Title>
-        <Button type="primary" onClick={openCreate}>
-          Novo evento
-        </Button>
+        <Link href="/admin/eventos/novo">
+          <Button type="primary">Novo evento</Button>
+        </Link>
       </div>
 
       <Table
@@ -162,48 +194,8 @@ export default function AdminEventosPage() {
         columns={columns}
         dataSource={items}
         pagination={{ pageSize: 8 }}
-        scroll={{ x: 900 }}
+        scroll={{ x: 1100 }}
       />
-
-      <Modal
-        open={isOpen}
-        title={editing ? 'Editar evento' : 'Novo evento'}
-        onCancel={() => setIsOpen(false)}
-        onOk={() => form.submit()}
-        okText="Salvar"
-      >
-        <Form form={form} layout="vertical" onFinish={submit}>
-          <Form.Item label="Slug" name="slug" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item label="Título" name="title" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item label="Destino" name="destination" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item label="Data" name="dateLabel" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item label="Status" name="status" rules={[{ required: true }]}>
-            <Select
-              options={[
-                { value: 'draft', label: 'Draft' },
-                { value: 'active', label: 'Active' },
-                { value: 'sold_out', label: 'Sold out' },
-                { value: 'finished', label: 'Finished' },
-                { value: 'inactive', label: 'Inactive' },
-              ]}
-            />
-          </Form.Item>
-          <Form.Item label="Valor" name="price">
-            <InputNumber className="w-full" min={0} />
-          </Form.Item>
-          <Form.Item label="Capacidade" name="capacity">
-            <InputNumber className="w-full" min={1} />
-          </Form.Item>
-        </Form>
-      </Modal>
     </div>
   );
 }

@@ -41,6 +41,7 @@ export type CreateReservationData = CreateReservationInput & {
 
 export type ReservationsRepository = {
   findAll(): Promise<ReservationWithRelations[]>;
+  findByTripId(tripId: string): Promise<ReservationWithRelations[]>;
   findById(id: string): Promise<ReservationWithRelations | null>;
   create(input: CreateReservationData): Promise<ReservationWithRelations>;
   updateStatus(

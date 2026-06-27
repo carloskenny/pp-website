@@ -10,99 +10,59 @@ import {
 export class ReservationsPrismaRepository implements ReservationsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  private readonly includeRelations = {
+    trip: {
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        destination: true,
+        dateLabel: true,
+      },
+    },
+    trilheiro: {
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        phone: true,
+        status: true,
+      },
+    },
+    boardingPoint: {
+      select: {
+        id: true,
+        label: true,
+      },
+    },
+  } as const;
+
   findAll() {
     return this.prisma.reservation.findMany({
       orderBy: { createdAt: 'desc' },
-      include: {
-        trip: {
-          select: {
-            id: true,
-            slug: true,
-            title: true,
-            destination: true,
-            dateLabel: true,
-          },
-        },
-        trilheiro: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-            phone: true,
-            status: true,
-          },
-        },
-        boardingPoint: {
-          select: {
-            id: true,
-            label: true,
-          },
-        },
-      },
+      include: this.includeRelations,
+    });
+  }
+
+  findByTripId(tripId: string) {
+    return this.prisma.reservation.findMany({
+      where: { tripId },
+      orderBy: { createdAt: 'desc' },
+      include: this.includeRelations,
     });
   }
 
   findById(id: string) {
     return this.prisma.reservation.findUnique({
       where: { id },
-      include: {
-        trip: {
-          select: {
-            id: true,
-            slug: true,
-            title: true,
-            destination: true,
-            dateLabel: true,
-          },
-        },
-        trilheiro: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-            phone: true,
-            status: true,
-          },
-        },
-        boardingPoint: {
-          select: {
-            id: true,
-            label: true,
-          },
-        },
-      },
+      include: this.includeRelations,
     });
   }
 
   create(input: CreateReservationInput) {
     return this.prisma.reservation.create({
       data: input,
-      include: {
-        trip: {
-          select: {
-            id: true,
-            slug: true,
-            title: true,
-            destination: true,
-            dateLabel: true,
-          },
-        },
-        trilheiro: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-            phone: true,
-            status: true,
-          },
-        },
-        boardingPoint: {
-          select: {
-            id: true,
-            label: true,
-          },
-        },
-      },
+      include: this.includeRelations,
     });
   }
 
@@ -110,32 +70,7 @@ export class ReservationsPrismaRepository implements ReservationsRepository {
     return this.prisma.reservation.update({
       where: { id },
       data: { status: input.status },
-      include: {
-        trip: {
-          select: {
-            id: true,
-            slug: true,
-            title: true,
-            destination: true,
-            dateLabel: true,
-          },
-        },
-        trilheiro: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-            phone: true,
-            status: true,
-          },
-        },
-        boardingPoint: {
-          select: {
-            id: true,
-            label: true,
-          },
-        },
-      },
+      include: this.includeRelations,
     });
   }
 }

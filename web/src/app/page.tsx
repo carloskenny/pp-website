@@ -1,9 +1,12 @@
 import Image from 'next/image';
 import { MobileMenu } from '@/components/layout/mobile-menu';
 import { TripCard } from '@/components/trips/trip-card';
-import { trips } from '@/lib/data/trips';
+import { getTrips } from '@/lib/api';
+import { trips as fallbackTrips } from '@/lib/data/trips';
 
-export default function HomePage() {
+export default async function HomePage() {
+  const trips = await getTrips().catch(() => fallbackTrips);
+
   return (
     <main className="mx-auto min-h-screen w-full max-w-[1033px] bg-background">
       <div className="flex min-h-screen flex-col">

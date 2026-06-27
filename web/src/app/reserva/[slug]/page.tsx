@@ -20,7 +20,7 @@ export default async function ReservaPage({ params }: Props) {
       </p>
 
       <section className="mt-6 rounded-xl2 bg-zinc-900 p-4 desktop:max-w-[720px] desktop:p-6">
-        <ReservationForm tripId={trip.id} />
+        <ReservationForm tripId={trip.id} boardingPoints={trip.boardingPoints ?? []} />
       </section>
     </main>
   );

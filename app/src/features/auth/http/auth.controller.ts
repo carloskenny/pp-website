@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Req,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import type { Request, Response } from 'express';
@@ -14,14 +6,20 @@ import { ZodError } from 'zod';
 import { fromZodError } from '../../../shared/http/zod-validation.exception';
 import { UnauthorizedException } from '@nestjs/common';
 import {
+  ACCESS_COOKIE_NAME,
+  buildAccessCookieOptions,
   buildRefreshCookieOptions,
+  buildSessionClearCookieOptions,
   REFRESH_COOKIE_NAME,
   parseCookie,
   parseDurationToMs,
 } from '../auth-session';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { loginSchema } from '../schemas/auth.schema';
-import { updateCurrentUserSchema, updateUserPasswordSchema } from '../../users/schemas/users.schema';
+import {
+  updateCurrentUserSchema,
+  updateUserPasswordSchema,
+} from '../../users/schemas/users.schema';
 import { LoginUseCase } from '../use-cases/login.use-case';
 import { GetCurrentUserUseCase } from '../use-cases/get-current-user.use-case';
 import { RefreshSessionUseCase } from '../use-cases/refresh-session.use-case';
@@ -53,8 +51,16 @@ export class AuthController {
   async login(@Body() body: unknown, @Res({ passthrough: true }) response: Response) {
     try {
       const session = await this.loginUseCase.execute(loginSchema.parse(body));
+      const accessCookieMaxAge = parseDurationToMs(
+        this.configService.getOrThrow<string>('JWT_EXPIRES_IN'),
+      );
       const refreshCookieMaxAge = parseDurationToMs(
         this.configService.getOrThrow<string>('JWT_REFRESH_EXPIRES_IN'),
+      );
+      response.cookie(
+        ACCESS_COOKIE_NAME,
+        session.accessToken,
+        buildAccessCookieOptions(accessCookieMaxAge),
       );
       response.cookie(
         REFRESH_COOKIE_NAME,
@@ -114,8 +120,16 @@ export class AuthController {
   @Post('refresh')
   async refresh(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
     const session = await this.refreshSessionUseCase.execute(request.headers.cookie);
+    const accessCookieMaxAge = parseDurationToMs(
+      this.configService.getOrThrow<string>('JWT_EXPIRES_IN'),
+    );
     const refreshCookieMaxAge = parseDurationToMs(
       this.configService.getOrThrow<string>('JWT_REFRESH_EXPIRES_IN'),
+    );
+    response.cookie(
+      ACCESS_COOKIE_NAME,
+      session.accessToken,
+      buildAccessCookieOptions(accessCookieMaxAge),
     );
     response.cookie(
       REFRESH_COOKIE_NAME,
@@ -145,9 +159,12 @@ export class AuthController {
           const refreshSecret =
             this.configService.get<string>('JWT_REFRESH_SECRET') ??
             this.configService.getOrThrow<string>('JWT_SECRET');
-          const payload = await this.jwtService.verifyAsync<{ sub: string }>(refreshToken, {
-            secret: refreshSecret,
-          });
+          const payload = await this.jwtService.verifyAsync<{ sub: string }>(
+            refreshToken,
+            {
+              secret: refreshSecret,
+            },
+          );
           await this.logoutSessionUseCase.execute(payload.sub);
         } catch {
           // ignore invalid token on logout
@@ -169,7 +186,8 @@ export class AuthController {
       }
     }
 
-    response.clearCookie(REFRESH_COOKIE_NAME, { path: '/' });
+    response.clearCookie(ACCESS_COOKIE_NAME, buildSessionClearCookieOptions());
+    response.clearCookie(REFRESH_COOKIE_NAME, buildSessionClearCookieOptions());
     return { success: true };
   }
 }
