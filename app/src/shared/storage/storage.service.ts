@@ -2,7 +2,7 @@ import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import crypto from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 
 @Injectable()
 export class StorageService {
@@ -17,9 +17,7 @@ export class StorageService {
       forcePathStyle: this.configService.get<boolean>('STORAGE_FORCE_PATH_STYLE'),
       credentials: {
         accessKeyId: this.configService.getOrThrow<string>('STORAGE_ACCESS_KEY'),
-        secretAccessKey: this.configService.getOrThrow<string>(
-          'STORAGE_SECRET_KEY',
-        ),
+        secretAccessKey: this.configService.getOrThrow<string>('STORAGE_SECRET_KEY'),
       },
     });
   }
@@ -31,7 +29,7 @@ export class StorageService {
     expiresInSeconds?: number;
   }) {
     const extension = params.fileName.split('.').pop() || 'bin';
-    const key = `${params.folder}/${crypto.randomUUID()}.${extension}`;
+    const key = `${params.folder}/${randomUUID()}.${extension}`;
 
     const command = new PutObjectCommand({
       Bucket: this.bucket,
@@ -43,8 +41,7 @@ export class StorageService {
       expiresIn: params.expiresInSeconds ?? 300,
     });
 
-    const publicBase =
-      this.configService.get<string>('STORAGE_ENDPOINT') || '';
+    const publicBase = this.configService.get<string>('STORAGE_ENDPOINT') || '';
     const publicUrl = publicBase
       ? `${publicBase.replace(/\/$/, '')}/${this.bucket}/${key}`
       : key;
