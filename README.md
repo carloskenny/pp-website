@@ -116,6 +116,4 @@ Se os scripts forem diferentes no seu projeto, ajuste no `compose.yml`.
 
 ## Onde paramos / próximo passo recomendado
 
-1. Proteger rotas `/admin/*` via autenticação (token/JWT no front).
-2. Enriquecer retorno de reservas com dados da trip (title/slug) no backend.
-3. Iniciar feature de builder da landing por trip (registrada em backlog).
+Consulte `ROADMAP.md` para a sequência atualizada das próximas entregas.
