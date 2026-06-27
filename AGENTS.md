@@ -330,3 +330,19 @@ Uma entrega é considerada pronta quando:
 - usa componentes reutilizáveis e tipagem forte;
 - não depende de conteúdo hardcoded em seções principais;
 - está pronta para evolução para Nest + Postgres sem refatoração estrutural grande.
+
+---
+
+## 16) Documentação obrigatória antes de cada fase
+
+Antes de iniciar qualquer nova fase ou bloco funcional, o agente deve ler, nesta ordem:
+
+1. `AGENTS.md`
+2. `docs/roadmap/modelo-2.md`
+3. `docs/roadmap/backlog.md`
+4. `docs/product/regras-negocio.md`
+5. `docs/architecture/overview.md`
+6. os documentos arquiteturais específicos da tarefa
+
+Regra:
+- se a documentação e o código divergirem, a documentação de produto e arquitetura tem precedência para orientar a implementação, e o desvio deve ser registrado.

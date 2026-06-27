@@ -3,7 +3,7 @@
 Documento operacional para orientar a execução das próximas entregas do projeto.
 
 Base de referência:
-- `BACKLOG.md`
+- `docs/roadmap/backlog.md`
 - `PROJECT_MAP.md`
 - `context.md`
 - estado atual do código em `app/` e `web/`
