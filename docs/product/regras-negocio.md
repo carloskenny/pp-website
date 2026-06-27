@@ -8,6 +8,38 @@
 - `Trilheiro`: participante final, separado de `User`.
 - `Media`: arquivos e imagens.
 
+## Classificação de evento
+
+- `experienceType`: tipo principal da experiência.
+- `interests`: atrativos/interesses principais.
+- `difficulty`: dificuldade principal.
+
+Tipos de experiência:
+- `trail` = Trilha
+- `tour` = Passeio
+- `camping` = Camping
+- `expedition` = Expedição
+
+Atrativos/interesses:
+- `mountain` = Montanha
+- `trail` = Trilha
+- `viewpoint` = Mirante
+- `waterfall` = Cachoeira
+- `canyon` = Cânion
+- `river_aquatrekking` = Rio / Aquatrekking
+- `beach` = Praia
+- `rappel` = Rapel
+- `bungee_jump` = Bungee Jump
+- `cave` = Caverna
+- `sunrise` = Nascer do Sol
+- `sunset` = Pôr do Sol
+
+Dificuldades:
+- `easy` = Leve
+- `moderate` = Moderada
+- `hard` = Difícil
+- `very_hard` = Muito difícil
+
 ## Status de Trip
 
 - `draft`
@@ -25,6 +57,12 @@ Mapeamento de produto:
 - `inactive` = inativo interno
 - `canceled` = cancelado
 
+## Preferências futuras do trilheiro
+
+- trilheiros poderão salvar preferências usando os mesmos tipos, atrativos e dificuldades;
+- não implementar recomendação automática agora;
+- a estrutura deve permanecer compatível com essa evolução.
+
 ## Regras da agenda pública
 
 - `GET /api/trips` deve ser público.
@@ -38,4 +76,3 @@ Mapeamento de produto:
 - Endpoints administrativos de Trip exigem autenticação e role permitida.
 - Não usar `localStorage` para sessão.
 - Usar cookies `httpOnly` e o fluxo de refresh já existente.
-

@@ -1,15 +1,14 @@
 import dayjs from 'dayjs';
 import Link from 'next/link';
 import type { Trip } from '@/types/trip';
+import {
+  tripAttractionTypeLabels,
+  tripDifficultyLabels,
+  tripExperienceTypeLabels,
+} from '@/constants/trip-classification';
 
 type Props = {
   trip: Trip;
-};
-
-const difficultyLabels: Record<string, string> = {
-  easy: 'Fácil',
-  moderate: 'Moderada',
-  hard: 'Difícil',
 };
 
 function formatTripDate(trip: Trip) {
@@ -56,7 +55,7 @@ export function TripCard({ trip }: Props) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
         <div className="absolute inset-x-4 bottom-4 flex items-center justify-between gap-3">
           <span className="rounded-full bg-black/50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-white backdrop-blur">
-            {difficultyLabels[trip.difficulty ?? ''] ?? 'Aventura'}
+            {tripExperienceTypeLabels[trip.experienceType] ?? 'Aventura'}
           </span>
           <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">
             {trip.status === 'sold_out' ? 'Esgotado' : 'Agenda aberta'}
@@ -88,15 +87,38 @@ export function TripCard({ trip }: Props) {
           </div>
           <div className="rounded-2xl bg-white/5 p-3">
             <dt className="text-xs uppercase tracking-[0.2em] text-zinc-400">
+              Experiência
+            </dt>
+            <dd className="mt-1 font-semibold">
+              {tripExperienceTypeLabels[trip.experienceType] ?? 'A definir'}
+            </dd>
+          </div>
+          <div className="rounded-2xl bg-white/5 p-3">
+            <dt className="text-xs uppercase tracking-[0.2em] text-zinc-400">
               Dificuldade
             </dt>
             <dd className="mt-1 font-semibold">
-              {difficultyLabels[trip.difficulty ?? ''] ?? 'A definir'}
+              {tripDifficultyLabels[trip.difficulty] ?? 'A definir'}
             </dd>
           </div>
           <div className="rounded-2xl bg-white/5 p-3">
             <dt className="text-xs uppercase tracking-[0.2em] text-zinc-400">Vagas</dt>
             <dd className="mt-1 font-semibold">{formatSpots(trip)}</dd>
+          </div>
+          <div className="col-span-2 rounded-2xl bg-white/5 p-3">
+            <dt className="text-xs uppercase tracking-[0.2em] text-zinc-400">
+              Atrativos
+            </dt>
+            <dd className="mt-1 flex flex-wrap gap-2 font-semibold">
+              {trip.interests.slice(0, 4).map((interest) => (
+                <span
+                  key={interest}
+                  className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-zinc-100"
+                >
+                  {tripAttractionTypeLabels[interest] ?? interest}
+                </span>
+              ))}
+            </dd>
           </div>
         </dl>
 

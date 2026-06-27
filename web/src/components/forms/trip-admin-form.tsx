@@ -26,7 +26,18 @@ import {
 } from '@/lib/api';
 import { canAccess } from '@/lib/permissions';
 import { useAuth } from '@/components/auth/auth-provider';
-import type { Trip, TripStatus } from '@/types/trip';
+import type {
+  Trip,
+  TripAttractionType,
+  TripDifficulty,
+  TripExperienceType,
+  TripStatus,
+} from '@/types/trip';
+import {
+  tripAttractionTypeOptions,
+  tripDifficultyOptions,
+  tripExperienceTypeOptions,
+} from '@/constants/trip-classification';
 
 type Props = {
   mode: 'create' | 'edit';
@@ -39,9 +50,11 @@ type FormValues = {
   destination: string;
   eventDate: dayjs.Dayjs;
   departureTime: string;
+  experienceType: TripExperienceType;
+  interests: TripAttractionType[];
   price?: number;
   capacity?: number;
-  difficulty?: string;
+  difficulty: TripDifficulty;
   description?: string;
   itinerary?: string;
   includedItems?: string;
@@ -57,12 +70,6 @@ const statusOptions: Array<{ value: TripStatus; label: string }> = [
   { value: 'canceled', label: 'Cancelado' },
 ];
 
-const difficultyOptions = [
-  { value: 'easy', label: 'Fácil' },
-  { value: 'moderate', label: 'Moderada' },
-  { value: 'hard', label: 'Difícil' },
-];
-
 function linesToArray(value?: string) {
   return value
     ?.split('\n')
@@ -71,7 +78,14 @@ function linesToArray(value?: string) {
 }
 
 function tripToInitialValues(trip?: Trip): Partial<FormValues> {
-  if (!trip) return { status: 'draft' };
+  if (!trip) {
+    return {
+      status: 'draft',
+      experienceType: 'trail',
+      interests: [],
+      difficulty: 'moderate',
+    };
+  }
 
   return {
     title: trip.title,
@@ -79,9 +93,11 @@ function tripToInitialValues(trip?: Trip): Partial<FormValues> {
     destination: trip.destination,
     eventDate: trip.eventDate ? dayjs(trip.eventDate) : undefined,
     departureTime: trip.departureTime ?? undefined,
+    experienceType: trip.experienceType,
+    interests: trip.interests ?? [],
     price: trip.price ?? undefined,
     capacity: trip.capacity ?? undefined,
-    difficulty: trip.difficulty ?? undefined,
+    difficulty: trip.difficulty,
     description: trip.description ?? trip.summary ?? undefined,
     itinerary: trip.itinerary?.join('\n'),
     includedItems: (trip.includedItems ?? trip.includes)?.join('\n'),
@@ -129,6 +145,8 @@ export function TripAdminForm({ mode, initialTrip }: Props) {
       eventDate: eventDate.toISOString(),
       dateLabel: values.eventDate.format('DD/MM/YYYY'),
       departureTime: values.departureTime,
+      experienceType: values.experienceType,
+      interests: values.interests,
       price: values.price,
       capacity: values.capacity,
       difficulty: values.difficulty,
@@ -256,6 +274,14 @@ export function TripAdminForm({ mode, initialTrip }: Props) {
           <Input size="large" />
         </Form.Item>
 
+        <Form.Item
+          label="Tipo de experiência"
+          name="experienceType"
+          rules={[{ required: true }]}
+        >
+          <Select size="large" options={tripExperienceTypeOptions} />
+        </Form.Item>
+
         <Form.Item label="Data do evento" name="eventDate" rules={[{ required: true }]}>
           <DatePicker size="large" className="w-full" format="DD/MM/YYYY" />
         </Form.Item>
@@ -268,8 +294,21 @@ export function TripAdminForm({ mode, initialTrip }: Props) {
           <Input size="large" placeholder="05:30" />
         </Form.Item>
 
+        <Form.Item
+          label="Atrativos / interesses"
+          name="interests"
+          rules={[{ required: true }]}
+        >
+          <Select
+            size="large"
+            mode="multiple"
+            maxTagCount="responsive"
+            options={tripAttractionTypeOptions}
+          />
+        </Form.Item>
+
         <Form.Item label="Dificuldade" name="difficulty" rules={[{ required: true }]}>
-          <Select size="large" options={difficultyOptions} />
+          <Select size="large" options={tripDifficultyOptions} />
         </Form.Item>
 
         <Form.Item label="Preço" name="price" rules={[{ required: true }]}>

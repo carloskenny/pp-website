@@ -12,6 +12,13 @@ export type TripWithBoardingPoints = Prisma.TripGetPayload<{
         order: true;
       };
     };
+    interests: {
+      select: {
+        id: true;
+        type: true;
+        order: true;
+      };
+    };
   };
 }>;
 
@@ -24,11 +31,19 @@ export type PublicTripCard = Prisma.TripGetPayload<{
     dateLabel: true;
     eventDate: true;
     departureTime: true;
+    experienceType: true;
     price: true;
     capacity: true;
     difficulty: true;
     mainImageUrl: true;
     status: true;
+    interests: {
+      select: {
+        id: true;
+        type: true;
+        order: true;
+      };
+    };
   };
 }> & {
   availableSpots: number | null;

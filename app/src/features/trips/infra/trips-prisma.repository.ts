@@ -16,6 +16,14 @@ export class TripsPrismaRepository implements TripsRepository {
       },
       orderBy: { order: 'asc' as const },
     },
+    interests: {
+      select: {
+        id: true,
+        type: true,
+        order: true,
+      },
+      orderBy: { order: 'asc' as const },
+    },
   } as const;
 
   private readonly publicTripSelect = {
@@ -26,11 +34,20 @@ export class TripsPrismaRepository implements TripsRepository {
     dateLabel: true,
     eventDate: true,
     departureTime: true,
+    experienceType: true,
     price: true,
     capacity: true,
     difficulty: true,
     mainImageUrl: true,
     status: true,
+    interests: {
+      select: {
+        id: true,
+        type: true,
+        order: true,
+      },
+      orderBy: { order: 'asc' as const },
+    },
   } as const;
 
   private async withAvailableSpots(
@@ -100,37 +117,13 @@ export class TripsPrismaRepository implements TripsRepository {
   }
 
   create(input: CreateTripInput) {
-    const { boardingPoints, ...tripInput } = input;
+    const { boardingPoints, interests, ...tripInput } = input;
 
     return this.prisma.trip.create({
       data: {
         ...tripInput,
-        boardingPoints: boardingPoints?.length
-          ? {
-              create: boardingPoints.map((boardingPoint, index) => ({
-                label: boardingPoint.label,
-                order: boardingPoint.order ?? index,
-              })),
-            }
-          : undefined,
-      },
-      include: this.includeBoardingPoints,
-    });
-  }
-
-  update(id: string, input: UpdateTripInput) {
-    const { boardingPoints, ...tripInput } = input;
-
-    return this.prisma.$transaction(async (tx) => {
-      if (boardingPoints) {
-        await tx.tripBoardingPoint.deleteMany({ where: { tripId: id } });
-      }
-
-      return tx.trip.update({
-        where: { id },
-        data: {
-          ...tripInput,
-          boardingPoints: boardingPoints
+        boardingPoints:
+          boardingPoints !== undefined
             ? {
                 create: boardingPoints.map((boardingPoint, index) => ({
                   label: boardingPoint.label,
@@ -138,6 +131,54 @@ export class TripsPrismaRepository implements TripsRepository {
                 })),
               }
             : undefined,
+        interests:
+          interests !== undefined
+            ? {
+                create: interests.map((type, index) => ({
+                  type,
+                  order: index,
+                })),
+              }
+            : undefined,
+      },
+      include: this.includeBoardingPoints,
+    });
+  }
+
+  update(id: string, input: UpdateTripInput) {
+    const { boardingPoints, interests, ...tripInput } = input;
+
+    return this.prisma.$transaction(async (tx) => {
+      if (boardingPoints !== undefined) {
+        await tx.tripBoardingPoint.deleteMany({ where: { tripId: id } });
+      }
+
+      if (interests !== undefined) {
+        await tx.tripInterest.deleteMany({ where: { tripId: id } });
+      }
+
+      return tx.trip.update({
+        where: { id },
+        data: {
+          ...tripInput,
+          boardingPoints:
+            boardingPoints !== undefined
+              ? {
+                  create: boardingPoints.map((boardingPoint, index) => ({
+                    label: boardingPoint.label,
+                    order: boardingPoint.order ?? index,
+                  })),
+                }
+              : undefined,
+          interests:
+            interests !== undefined
+              ? {
+                  create: interests.map((type, index) => ({
+                    type,
+                    order: index,
+                  })),
+                }
+              : undefined,
         },
         include: this.includeBoardingPoints,
       });

@@ -1,4 +1,9 @@
 import { z } from 'zod';
+import {
+  tripAttractionTypes,
+  tripDifficultyTypes,
+  tripExperienceTypes,
+} from '../constants/trip-classification';
 
 export const createTripSchema = z.object({
   slug: z.string().min(3),
@@ -7,8 +12,9 @@ export const createTripSchema = z.object({
   dateLabel: z.string().min(2),
   eventDate: z.coerce.date().optional(),
   departureTime: z.string().min(2).optional(),
-  type: z.string().min(2).optional(),
-  difficulty: z.string().min(2).optional(),
+  experienceType: z.enum(tripExperienceTypes),
+  interests: z.array(z.enum(tripAttractionTypes)).min(1),
+  difficulty: z.enum(tripDifficultyTypes),
   duration: z.string().min(1).optional(),
   price: z.number().nonnegative().optional(),
   capacity: z.number().int().positive().optional(),

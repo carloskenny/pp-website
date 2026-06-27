@@ -1,5 +1,5 @@
 import type { ReservationPayload } from '@/types/reservation';
-import type { Trip } from '@/types/trip';
+import type { Trip, TripAttractionType } from '@/types/trip';
 
 function getApiBaseUrl() {
   const isServer = typeof window === 'undefined';
@@ -98,7 +98,10 @@ async function authFetch(input: string, options: RequestInit = {}) {
   return response;
 }
 
-type ApiTrip = Omit<Trip, 'price'> & { price?: string | number | null };
+type ApiTrip = Omit<Trip, 'price' | 'interests'> & {
+  price?: string | number | null;
+  interests?: Array<{ id?: string; type: TripAttractionType } | TripAttractionType>;
+};
 export type TripMutationPayload = Omit<Partial<Trip>, 'boardingPoints'> & {
   boardingPoints?: Array<{ id?: string; label: string; order?: number }>;
 };
@@ -106,6 +109,13 @@ export type TripMutationPayload = Omit<Partial<Trip>, 'boardingPoints'> & {
 function toTrip(value: ApiTrip): Trip {
   const price =
     typeof value.price === 'string' ? Number(value.price) : (value.price ?? undefined);
+  const experienceType = value.experienceType ?? 'trail';
+  const difficulty = value.difficulty ?? 'moderate';
+  const interests = Array.isArray(value.interests)
+    ? (value.interests
+        .map((item) => (typeof item === 'string' ? item : item.type))
+        .filter(Boolean) as TripAttractionType[])
+    : [];
   const availableSpots =
     typeof value.availableSpots === 'string'
       ? Number(value.availableSpots)
@@ -113,7 +123,10 @@ function toTrip(value: ApiTrip): Trip {
 
   return {
     ...value,
+    experienceType,
+    difficulty,
     price,
+    interests,
     availableSpots,
   };
 }

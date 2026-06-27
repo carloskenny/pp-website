@@ -1,0 +1,3 @@
+-- No-op migration.
+-- The trip classification enums and interests relation already exist in the baseline schema.
+-- This migration exists to keep the history aligned with the current domain documentation.
